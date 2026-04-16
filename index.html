@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TS STORE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #0a0a12;
+            --bg-mid: #12121f;
+            --gold: #d4a843;
+            --gold-light: #f0d078;
+            --gold-dark: #a07820;
+            --accent-red: #c0392b;
+            --accent-warm: #e74c3c;
+            --text: #f5f0e8;
+            --text-muted: #8a8678;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-deep);
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* خلفية متحركة مع نجوم */
+        .stars-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--gold-light);
+            border-radius: 50%;
+            animation: twinkle var(--dur) ease-in-out infinite alternate;
+            opacity: 0;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.1; transform: scale(0.5); }
+            100% { opacity: var(--max-opacity); transform: scale(1.2); }
+        }
+
+        /* هلال ذهبي متحرك */
+        .crescent {
+            position: fixed;
+            top: 40px;
+            left: 50px;
+            width: 80px;
+            height: 80px;
+            z-index: 1;
+            animation: floatCrescent 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(212, 168, 67, 0.5));
+        }
+
+        @keyframes floatCrescent {
+            0%, 100% { transform: translateY(0) rotate(-15deg); }
+            50% { transform: translateY(-15px) rotate(-10deg); }
+        }
+
+        /* فوانيس معلقة */
+        .lanterns {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .lantern {
+            position: absolute;
+            top: -10px;
+            animation: swing var(--swing-dur) ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+
+        .lantern-body {
+            width: var(--size);
+            height: calc(var(--size) * 1.4);
+            background: linear-gradient(180deg, var(--accent-red), #8b1a1a);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            box-shadow: 0 0 30px rgba(231, 76, 60, 0.4), inset 0 -10px 20px rgba(0,0,0,0.3);
+        }
+
+        .lantern-body::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(var(--size) * 0.5);
+            height: 10px;
+            background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+            border-radius: 3px;
+        }
+
+        .lantern-body::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(var(--size) * 0.4);
+            height: 8px;
+            background: linear-gradient(180deg, var(--gold-dark), var(--gold));
+            border-radius: 0 0 4px 4px;
+        }
+
+        .lantern-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(var(--size) * 0.4);
+            height: calc(var(--size) * 0.5);
+            background: radial-gradient(ellipse, rgba(255,200,100,0.6), transparent 70%);
+            border-radius: 50%;
+            animation: lanternPulse 2s ease-in-out infinite alternate;
+        }
+
+        .lantern-string {
+            width: 1px;
+            height: 30px;
+            background: var(--gold-dark);
+            margin: 0 auto;
+        }
+
+        @keyframes swing {
+            0% { transform: rotate(-8deg); }
+            100% { transform: rotate(8deg); }
+        }
+
+        @keyframes lanternPulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* زخرفة هندسية في الخلفية */
+        .geometric-pattern {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.04;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 60px, var(--gold) 60px, var(--gold) 61px),
+                repeating-linear-gradient(90deg, transparent, transparent 60px, var(--gold) 60px, var(--gold) 61px),
+                repeating-linear-gradient(45deg, transparent, transparent 85px, var(--gold) 85px, var(--gold) 86px),
+                repeating-linear-gradient(-45deg, transparent, transparent 85px, var(--gold) 85px, var(--gold) 86px);
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .store-name {
+            font-family: 'Amiri', serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark), var(--gold-light));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: goldShimmer 4s ease-in-out infinite;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+        }
+
+        @keyframes goldShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* الزر الرئيسي */
+        .cta-btn {
+            position: relative;
+            display: inline-block;
+            padding: 18px 60px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--bg-deep);
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow:
+                0 4px 20px rgba(212, 168, 67, 0.3),
+                0 0 60px rgba(212, 168, 67, 0.1);
+            letter-spacing: 1px;
+        }
+
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow:
+                0 8px 35px rgba(212, 168, 67, 0.5),
+                0 0 80px rgba(212, 168, 67, 0.2);
+        }
+
+        .cta-btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .cta-btn .btn-icon {
+            display: inline-block;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .cta-btn:hover .btn-icon {
+            transform: translateX(-4px);
+        }
+
+        /* جزيئات ذهبية حول الزر */
+        .btn-particles {
+            position: absolute;
+            inset: -40px;
+            pointer-events: none;
+        }
+
+        .btn-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gold-light);
+            border-radius: 50%;
+            animation: orbitParticle var(--orbit-dur) linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes orbitParticle {
+            0% { opacity: 0; transform: rotate(0deg) translateX(var(--orbit-r)) scale(0); }
+            20% { opacity: 0.8; transform: rotate(72deg) translateX(var(--orbit-r)) scale(1); }
+            80% { opacity: 0.6; transform: rotate(288deg) translateX(var(--orbit-r)) scale(0.8); }
+            100% { opacity: 0; transform: rotate(360deg) translateX(var(--orbit-r)) scale(0); }
+        }
+
+        /* نافذة الصورة المنبثقة */
+        .image-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 5, 10, 0);
+            backdrop-filter: blur(0px);
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .image-overlay.active {
+            background: rgba(5, 5, 10, 0.92);
+            backdrop-filter: blur(20px);
+            pointer-events: all;
+        }
+
+        .image-frame {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            transform: scale(0.5) rotateY(15deg);
+            opacity: 0;
+            transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .image-overlay.active .image-frame {
+            transform: scale(1) rotateY(0deg);
+            opacity: 1;
+        }
+
+        .image-frame::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark), var(--gold-light));
+            background-size: 300% 300%;
+            border-radius: 12px;
+            animation: goldShimmer 4s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .image-frame::after {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(ellipse at center, rgba(212, 168, 67, 0.15), transparent 70%);
+            border-radius: 20px;
+            z-index: -2;
+        }
+
+        .image-frame img {
+            display: block;
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+
+        /* زر الإغلاق */
+        .close-btn {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 44px;
+            height: 44px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            background: rgba(10, 10, 18, 0.8);
+            color: var(--gold-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .close-btn:hover {
+            background: var(--gold);
+            color: var(--bg-deep);
+            transform: translateX(-50%) rotate(90deg) scale(1.1);
+        }
+
+        /* تلميح أسفل الصفحة */
+        .scroll-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.4;
+            animation: hintPulse 2.5s ease-in-out infinite;
+        }
+
+        .scroll-hint span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+
+        .scroll-hint i {
+            color: var(--gold);
+            font-size: 1rem;
+        }
+
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+            50% { opacity: 0.6; transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* تأثير الضوء المتحرك في الخلفية */
+        .ambient-light {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 168, 67, 0.06), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            animation: ambientFloat 8s ease-in-out infinite;
+        }
+
+        .ambient-light:nth-child(1) {
+            top: -100px;
+            right: -100px;
+        }
+
+        .ambient-light:nth-child(2) {
+            bottom: -150px;
+            left: -100px;
+            animation-delay: -4s;
+            animation-duration: 10s;
+        }
+
+        @keyframes ambientFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, 20px) scale(1.1); }
+            66% { transform: translate(-20px, -10px) scale(0.95); }
+        }
+
+        /* استجابة للشاشات الصغيرة */
+        @media (max-width: 640px) {
+            .crescent {
+                width: 50px;
+                height: 50px;
+                top: 20px;
+                left: 20px;
+            }
+            .cta-btn {
+                padding: 15px 45px;
+                font-size: 1.2rem;
+            }
+            .image-frame {
+                max-width: 95vw;
+            }
+            .close-btn {
+                top: -45px;
+            }
+        }
+
+        /* تقليل الحركة لمن يفضل ذلك */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- أنوار خلفية -->
+    <div class="ambient-light"></div>
+    <div class="ambient-light"></div>
+
+    <!-- زخرفة هندسية -->
+    <div class="geometric-pattern"></div>
+
+    <!-- نجوم متلألئة -->
+    <div class="stars-container" id="starsContainer"></div>
+
+    <!-- هلال ذهبي SVG -->
+    <svg class="crescent" viewBox="0 0 100 100" fill="none">
+        <defs>
+            <linearGradient id="crescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#f0d078"/>
+                <stop offset="50%" style="stop-color:#d4a843"/>
+                <stop offset="100%" style="stop-color:#a07820"/>
+            </linearGradient>
+            <filter id="crescentGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+        <path d="M60 10 C35 10, 15 30, 15 55 C15 80, 35 95, 60 95 C40 88, 30 72, 30 55 C30 38, 40 18, 60 10Z"
+              fill="url(#crescentGrad)" filter="url(#crescentGlow)"/>
+        <!-- نجمة صغيرة بجانب الهلال -->
+        <circle cx="72" cy="22" r="3" fill="#f0d078" filter="url(#crescentGlow)"/>
+        <circle cx="78" cy="35" r="1.5" fill="#d4a843" opacity="0.7"/>
+    </svg>
+
+    <!-- فوانيس معلقة -->
+    <div class="lanterns" id="lanterns"></div>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <h1 class="store-name">TS STORE</h1>
+        <p class="subtitle">اضغط لاستكشاف التصميم</p>
+        <div style="position: relative; display: inline-block;">
+            <div class="btn-particles" id="btnParticles"></div>
+            <button class="cta-btn" id="ctaBtn" aria-label="اضغط هنا لعرض الصورة">
+                <span class="btn-icon"><i class="fas fa-hand-pointer"></i></span>
+                اضغط هنا
+            </button>
+        </div>
+    </main>
+
+    <!-- نافذة الصورة -->
+    <div class="image-overlay" id="imageOverlay" role="dialog" aria-modal="true" aria-label="عرض الصورة">
+        <div class="image-frame">
+            <button class="close-btn" id="closeBtn" aria-label="إغلاق الصورة">
+                <i class="fas fa-times"></i>
+            </button>
+            <img src="https://picsum.photos/seed/tsstore-festive/800/500.jpg" alt="تصميم احتفالي - TS STORE">
+        </div>
+    </div>
+
+    <!-- تلميح -->
+    <div class="scroll-hint">
+        <span>TS STORE</span>
+        <i class="fas fa-star"></i>
+    </div>
+
+    <script>
+        // === إنشاء النجوم المتلألئة ===
+        const starsContainer = document.getElementById('starsContainer');
+        const starCount = 60;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+            star.style.setProperty('--max-opacity', (0.3 + Math.random() * 0.7).toFixed(2));
+            star.style.animationDelay = (Math.random() * 5) + 's';
+            // بعض النجوم أكبر
+            if (Math.random() > 0.85) {
+                star.style.width = '3px';
+                star.style.height = '3px';
+                star.style.boxShadow = '0 0 6px rgba(240,208,120,0.5)';
+            }
+            starsContainer.appendChild(star);
+        }
+
+        // === إنشاء الفوانيس ===
+        const lanternsContainer = document.getElementById('lanterns');
+        const lanternPositions = [
+            { left: '8%', size: '36px', swingDur: '3.5s', delay: '0s' },
+            { left: '25%', size: '28px', swingDur: '4s', delay: '0.5s' },
+            { left: '50%', size: '32px', swingDur: '3.2s', delay: '1s' },
+            { left: '72%', size: '26px', swingDur: '4.5s', delay: '0.3s' },
+            { left: '90%', size: '34px', swingDur: '3.8s', delay: '0.7s' },
+        ];
+
+        lanternPositions.forEach(pos => {
+            const lantern = document.createElement('div');
+            lantern.classList.add('lantern');
+            lantern.style.left = pos.left;
+            lantern.style.setProperty('--swing-dur', pos.swingDur);
+            lantern.style.setProperty('--size', pos.size);
+            lantern.style.animationDelay = pos.delay;
+            lantern.innerHTML = `
+                <div class="lantern-string"></div>
+                <div class="lantern-body">
+                    <div class="lantern-glow"></div>
+                </div>
+            `;
+            lanternsContainer.appendChild(lantern);
+        });
+
+        // === جزيئات تدور حول الزر ===
+        const btnParticles = document.getElementById('btnParticles');
+        for (let i = 0; i < 6; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('btn-particle');
+            particle.style.top = '50%';
+            particle.style.left = '50%';
+            particle.style.setProperty('--orbit-dur', (3 + Math.random() * 3) + 's');
+            particle.style.setProperty('--orbit-r', (60 + Math.random() * 40) + 'px');
+            particle.style.animationDelay = (i * 0.5) + 's';
+            particle.style.width = (2 + Math.random() * 3) + 'px';
+            particle.style.height = particle.style.width;
+            btnParticles.appendChild(particle);
+        }
+
+        // === منطق فتح وإغلاق الصورة ===
+        const ctaBtn = document.getElementById('ctaBtn');
+        const imageOverlay = document.getElementById('imageOverlay');
+        const closeBtn = document.getElementById('closeBtn');
+
+        function openImage() {
+            imageOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            closeBtn.focus();
+        }
+
+        function closeImage() {
+            imageOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            ctaBtn.focus();
+        }
+
+        ctaBtn.addEventListener('click', openImage);
+        closeBtn.addEventListener('click', closeImage);
+
+        // إغلاق بالنقر على الخلفية
+        imageOverlay.addEventListener('click', (e) => {
+            if (e.target === imageOverlay) {
+                closeImage();
+            }
+        });
+
+        // إغلاق بزر Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageOverlay.classList.contains('active')) {
+                closeImage();
+            }
+        });
+
+        // === تتبع الماوس لتحريك الأنوار الخلفية ===
+        const ambientLights = document.querySelectorAll('.ambient-light');
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let currentX = mouseX;
+        let currentY = mouseY;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateAmbient() {
+            // تحريك سلس
+            currentX += (mouseX - currentX) * 0.02;
+            currentY += (mouseY - currentY) * 0.02;
+
+            const offsetX = (currentX - window.innerWidth / 2) * 0.05;
+            const offsetY = (currentY - window.innerHeight / 2) * 0.05;
+
+            ambientLights.forEach((light, i) => {
+                const dir = i === 0 ? 1 : -1;
+                light.style.transform = `translate(${offsetX * dir}px, ${offsetY * dir}px)`;
+            });
+
+            requestAnimationFrame(animateAmbient);
+        }
+        animateAmbient();
+    </script>
+</body>
+</html>
