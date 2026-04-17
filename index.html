@@ -1,1031 +1,660 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لا بيتسا إيطاليانا — Authentic Italian Pizza</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Noto Kufi Arabic', 'Inter', sans-serif; }
-        .font-italian { font-family: 'Playfair Display', serif; }
-        .font-serif { font-family: 'Newsreader', serif; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عالم البناء</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hud-bg: rgba(0,0,0,0.45);
+    --hud-border: rgba(255,255,255,0.1);
+    --accent: #4ade80;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{overflow:hidden;background:#000;font-family:'Cairo',sans-serif;cursor:none;}
+  canvas{display:block;}
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(2deg); } }
-        @keyframes steam { 0% { opacity: 0; transform: translateY(0) scaleX(1); } 50% { opacity: 0.5; transform: translateY(-18px) scaleX(1.3); } 100% { opacity: 0; transform: translateY(-36px) scaleX(0.7); } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
-        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(0,149,62,0.2); } 50% { box-shadow: 0 0 40px rgba(0,149,62,0.4); } }
-        @keyframes flag-wave { 0%, 100% { transform: skewX(0deg); } 25% { transform: skewX(1deg); } 75% { transform: skewX(-1deg); } }
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes bounce-in { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  #crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:50;pointer-events:none;display:none;}
+  #crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,0.9);border-radius:1px;}
+  #crosshair::before{width:2px;height:24px;top:-12px;left:-1px;}
+  #crosshair::after{width:24px;height:2px;top:-1px;left:-12px;}
 
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-        .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        .animate-scale-in { animation: scaleIn 0.5s ease-out forwards; }
-        .animate-bounce-in { animation: bounce-in 0.4s ease-out forwards; }
-        .flag-wave { animation: flag-wave 3s ease-in-out infinite; }
+  #hotbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:none;gap:3px;z-index:50;padding:5px;background:var(--hud-bg);border-radius:10px;border:1px solid var(--hud-border);backdrop-filter:blur(10px);}
+  .hotbar-slot{width:54px;height:54px;border-radius:6px;border:2px solid transparent;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;transition:border-color .15s,transform .15s;}
+  .hotbar-slot.active{border-color:var(--accent);transform:scale(1.12);box-shadow:0 0 12px rgba(74,222,128,0.3);}
+  .hotbar-slot:hover:not(.active){border-color:rgba(255,255,255,0.25);}
+  .slot-preview{width:36px;height:36px;border-radius:4px;box-shadow:inset -2px -3px 0 rgba(0,0,0,0.3),inset 2px 2px 0 rgba(255,255,255,0.15);}
+  .slot-key{position:absolute;top:1px;left:4px;font-size:.55rem;color:rgba(255,255,255,0.45);font-weight:700;}
+  .slot-name{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);color:#fff;font-size:.78rem;font-weight:700;z-index:50;background:var(--hud-bg);padding:4px 16px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;}
+  .slot-name.show{opacity:1;}
 
-        .steam-line { animation: steam 2.2s ease-out infinite; }
-        .steam-line:nth-child(2) { animation-delay: 0.6s; }
-        .steam-line:nth-child(3) { animation-delay: 1.2s; }
+  #hud-info{position:fixed;top:14px;left:14px;z-index:50;color:rgba(255,255,255,0.65);font-size:.72rem;display:none;line-height:1.9;text-shadow:0 1px 4px rgba(0,0,0,0.9);direction:ltr;text-align:left;}
+  #pauseHint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.65);font-size:1.05rem;z-index:60;display:none;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,0.8);background:var(--hud-bg);padding:18px 36px;border-radius:12px;backdrop-filter:blur(12px);}
 
-        .menu-card { opacity: 0; transform: translateY(30px); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .menu-card.visible { opacity: 1; transform: translateY(0); }
-        .menu-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .menu-card:hover .card-image { transform: scale(1.1); }
-        .menu-card:hover .price-tag { background: linear-gradient(135deg, #00953E, #00B140); color: #fff; }
-        .menu-card:hover .add-btn { background: linear-gradient(135deg, #00953E, #00B140); border-color: #00953E; color: #fff; }
+  /* دليل تحكم */
+  #controlsGuide{position:fixed;top:14px;right:14px;z-index:50;color:rgba(255,255,255,0.4);font-size:.6rem;display:none;line-height:2;text-shadow:0 1px 4px rgba(0,0,0,0.9);direction:rtl;text-align:right;background:rgba(0,0,0,0.25);padding:8px 14px;border-radius:8px;backdrop-filter:blur(6px);}
+  #controlsGuide b{color:rgba(255,255,255,0.7);}
 
-        .category-btn.active { background: linear-gradient(135deg, #00953E, #00B140); color: #fff; border-color: #00953E; }
-
-        .hero-gradient { background: linear-gradient(to left, rgba(10,10,10,0.97), rgba(10,10,10,0.75), transparent); }
-        .hero-gradient-bottom { background: linear-gradient(to top, #0a0a0a, transparent); }
-        .glow-green { background: radial-gradient(ellipse, rgba(0,149,62,0.12), transparent 70%); }
-
-        .badge-popular { background: linear-gradient(135deg, #00953E, #00B140); }
-        .badge-new { background: linear-gradient(135deg, #CE2B37, #E8364F); }
-        .badge-spicy { background: linear-gradient(135deg, #FF6B35, #FF8C42); }
-
-        .italian-stripe { background: linear-gradient(to left, #00953E 0%, #00953E 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #CE2B37 66.66%, #CE2B37 100%); }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        .toast { animation: fadeInUp 0.4s ease-out forwards; }
-        .toast-exit { animation: fadeOut 0.3s ease-in forwards; }
-        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
-
-        .size-btn.selected { background: rgba(0,149,62,0.15); border-color: #00953E; color: #fff; }
-        .size-btn.selected .size-price { color: #00B140; }
-        .size-btn.selected .size-icon { color: #00B140; }
-
-        .nav-blur { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-
-        .paypal-btn { background: linear-gradient(135deg, #0070BA, #1548A0); }
-        .paypal-btn:hover { background: linear-gradient(135deg, #003087, #0070BA); }
-
-        .step-active { background: linear-gradient(135deg, #00953E, #00B140); color: #fff; }
-        .step-done { background: #00953E; color: #fff; }
-        .step-pending { background: rgba(255,255,255,0.05); color: #737373; border: 1px solid rgba(255,255,255,0.1); }
-
-        .order-success { animation: bounce-in 0.6s ease-out forwards; }
-
-        .input-field { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
-        .input-field:focus { border-color: #00953E; box-shadow: 0 0 0 3px rgba(0,149,62,0.1); outline: none; }
-
-        .counter-btn { transition: all 0.2s; }
-        .counter-btn:active { transform: scale(0.9); }
-    </style>
+  @media(max-width:600px){
+    .hotbar-slot{width:42px;height:42px;}
+    .slot-preview{width:28px;height:28px;}
+    #controlsGuide{display:none!important;}
+  }
+</style>
 </head>
-<body class="bg-[#0a0a0a] text-white overflow-x-hidden">
+<body>
 
-    <!-- Italian Flag Stripe Top -->
-    <div class="italian-stripe h-1 fixed top-0 left-0 right-0 z-[100] flag-wave"></div>
+<div id="crosshair"></div>
+<div id="hotbar"></div>
+<div class="slot-name" id="slotName"></div>
+<div id="hud-info"></div>
+<div id="controlsGuide">
+  <b>WASD</b> حركة &nbsp; <b>Space</b> قفز<br>
+  <b>Shift</b> جري &nbsp; <b>1-9</b> اختيار<br>
+  <b>يسار</b> تدمير &nbsp; <b>يمين</b> بناء<br>
+  <b>عجلة</b> تبديل &nbsp; <b>ESC</b> إيقاف
+</div>
+<div id="pauseHint">اضغط أي مكان لاستئناف اللعب</div>
 
-    <!-- Navigation -->
-    <nav class="fixed top-1 left-0 right-0 z-50 nav-blur bg-[#0a0a0a]/85 border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="relative">
-                    <div class="w-11 h-11 rounded-full bg-gradient-to-br from-[#00953E] to-[#006B2D] flex items-center justify-center shadow-lg shadow-green-900/30">
-                        <span class="iconify text-white text-xl" data-icon="lucide:pizza"></span>
-                    </div>
-                    <div class="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-[#CE2B37] border-2 border-[#0a0a0a]"></div>
-                    <div class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-[#0a0a0a]"></div>
-                </div>
-                <div>
-                    <h1 class="text-base md:text-lg font-bold tracking-tight">لا بيتسا إيطاليانا</h1>
-                    <p class="text-[9px] text-neutral-500 tracking-[0.2em] uppercase font-italian italic">Pizza Autentica Italiana</p>
-                </div>
-            </div>
-            <div class="hidden lg:flex items-center gap-8">
-                <a href="#menu" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">المنيو</a>
-                <a href="#specials" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">العروض</a>
-                <a href="#about" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">قصتنا</a>
-                <a href="#contact" class="text-sm text-neutral-400 hover:text-[#00B140] transition-colors duration-300">تواصل</a>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="openCart()" class="relative p-2.5 rounded-full hover:bg-white/5 transition-colors">
-                    <span class="iconify text-xl text-neutral-300" data-icon="lucide:shopping-bag"></span>
-                    <span id="cart-count" class="absolute -top-0.5 -left-0.5 w-5 h-5 bg-[#CE2B37] text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
-                </button>
-                <button onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" class="hidden md:flex items-center gap-2 bg-gradient-to-r from-[#00953E] to-[#00B140] hover:shadow-lg hover:shadow-green-900/30 text-white text-sm font-medium px-5 py-2.5 rounded-full transition-all duration-300">
-                    <span>اطلب الآن</span>
-                    <span class="iconify text-base" data-icon="lucide:arrow-up-left"></span>
-                </button>
-                <button onclick="toggleMobileMenu()" class="lg:hidden p-2.5 rounded-full hover:bg-white/5 transition-colors">
-                    <span class="iconify text-xl text-neutral-300" data-icon="lucide:menu"></span>
-                </button>
-            </div>
-        </div>
-        <div id="mobile-menu" class="hidden lg:hidden border-t border-white/5 bg-[#0a0a0a]/95 nav-blur">
-            <div class="px-6 py-4 flex flex-col gap-3">
-                <a href="#menu" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">المنيو</a>
-                <a href="#specials" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">العروض</a>
-                <a href="#about" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">قصتنا</a>
-                <a href="#contact" onclick="toggleMobileMenu()" class="text-sm text-neutral-400 hover:text-[#00B140] py-2 transition-colors">تواصل</a>
-                <button onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'});toggleMobileMenu()" class="flex items-center justify-center gap-2 bg-gradient-to-r from-[#00953E] to-[#00B140] text-white text-sm font-medium px-5 py-2.5 rounded-full mt-2">اطلب الآن</button>
-            </div>
-        </div>
-    </nav>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { Water } from 'three/addons/objects/Water.js';
+import { Sky } from 'three/addons/objects/Sky.js';
 
-    <!-- Hero Section -->
-    <section class="relative min-h-[100vh] flex items-center overflow-hidden">
-        <div class="absolute inset-0">
-            <img src="https://picsum.photos/seed/italian-pizza-oven-dark/1920/1080.jpg" alt="Italian Pizza" class="w-full h-full object-cover opacity-35" />
-            <div class="hero-gradient absolute inset-0"></div>
-            <div class="hero-gradient-bottom absolute inset-0"></div>
-            <div class="glow-green absolute top-1/4 right-1/4 w-96 h-96 rounded-full"></div>
-        </div>
-        <div class="absolute top-1/3 right-[12%] md:right-[18%] flex gap-3">
-            <div class="steam-line w-0.5 h-7 bg-gradient-to-t from-transparent via-white/15 to-transparent rounded-full"></div>
-            <div class="steam-line w-0.5 h-9 bg-gradient-to-t from-transparent via-white/10 to-transparent rounded-full"></div>
-            <div class="steam-line w-0.5 h-5 bg-gradient-to-t from-transparent via-white/15 to-transparent rounded-full"></div>
-        </div>
+// ==============================
+// ثوابت
+// ==============================
+const WORLD_W = 64, WORLD_D = 64, MAX_H = 40;
+const GRAVITY = -28, JUMP_VEL = 9.2;
+const WALK_SPEED = 5.8, SPRINT_SPEED = 9;
+const PLAYER_H = 1.7, PLAYER_R = 0.28, REACH = 8;
+const TEX_SIZE = 16;
 
-        <div class="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-28 pb-20 w-full">
-            <div class="max-w-2xl">
-                <!-- Italian Flag Badge -->
-                <div class="animate-fade-in-up flex items-center gap-3 mb-8" style="animation-delay: 0.2s;">
-                    <div class="flex h-6 rounded-full overflow-hidden shadow-lg">
-                        <div class="w-5 bg-[#00953E]"></div>
-                        <div class="w-5 bg-white"></div>
-                        <div class="w-5 bg-[#CE2B37]"></div>
-                    </div>
-                    <span class="text-xs text-neutral-400 tracking-wider">صُنعت بإتقان على الطريقة الإيطالية</span>
-                </div>
+const BLOCK_TYPES = {
+  0:{name:'هواء',solid:false},
+  1:{name:'عشب',solid:true},
+  2:{name:'تراب',solid:true},
+  3:{name:'حجر',solid:true},
+  4:{name:'خشب',solid:true},
+  5:{name:'أوراق',solid:true},
+  6:{name:'رمل',solid:true},
+  7:{name:'ماء',solid:false},
+  8:{name:'حجر رملي',solid:true},
+  9:{name:'ثلج',solid:true},
+  10:{name:'صخر',solid:true},
+};
+const HOTBAR_ITEMS = [1,2,3,4,5,6,8,9,10];
+const BLOCK_COLORS = {
+  1:[[0.35,0.58,0.22],[0.50,0.36,0.24],[0.50,0.36,0.24]],
+  2:[[0.50,0.36,0.24],[0.48,0.34,0.22],[0.45,0.32,0.20]],
+  3:[[0.52,0.52,0.52],[0.48,0.48,0.48],[0.44,0.44,0.44]],
+  4:[[0.58,0.42,0.20],[0.48,0.34,0.16],[0.58,0.42,0.20]],
+  5:[[0.22,0.52,0.14],[0.20,0.48,0.12],[0.18,0.44,0.10]],
+  6:[[0.90,0.85,0.55],[0.88,0.82,0.50],[0.85,0.78,0.45]],
+  7:[[0.20,0.45,0.80],[0.18,0.40,0.75],[0.15,0.35,0.70]],
+  8:[[0.78,0.68,0.50],[0.74,0.64,0.46],[0.70,0.60,0.42]],
+  9:[[0.92,0.94,0.96],[0.88,0.90,0.93],[0.84,0.86,0.90]],
+  10:[[0.40,0.38,0.36],[0.36,0.34,0.32],[0.32,0.30,0.28]],
+};
 
-                <h1 class="animate-fade-in-up text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-4" style="animation-delay: 0.4s;">
-                    <span class="font-italian italic text-[#00B140]">La Vera</span>
-                    <br>
-                    بيتزا إيطالية
-                    <br>
-                    <span class="text-neutral-400 text-3xl md:text-5xl lg:text-6xl font-light">أصيلة</span>
-                </h1>
+// ==============================
+// ملمس بكسلي عالي الجودة
+// ==============================
+function makeTex(fn){
+  const c=document.createElement('canvas');
+  c.width=c.height=TEX_SIZE;
+  fn(c.getContext('2d'),TEX_SIZE);
+  const t=new THREE.CanvasTexture(c);
+  t.magFilter=THREE.NearestFilter;
+  t.minFilter=THREE.NearestFilter;
+  t.colorSpace=THREE.SRGBColorSpace;
+  t.generateMipmaps=false;
+  return t;
+}
+function addNoise(ctx,s,r,g,b,v){
+  for(let x=0;x<s;x++)for(let y=0;y<s;y++){
+    const d=(Math.random()-0.5)*v;
+    ctx.fillStyle=`rgb(${Math.max(0,Math.min(255,r+d))|0},${Math.max(0,Math.min(255,g+d))|0},${Math.max(0,Math.min(255,b+d))|0})`;
+    ctx.fillRect(x,y,1,1);
+  }
+}
+function drawLines(ctx,s,r,g,b,n){ctx.strokeStyle=`rgba(${r},${g},${b},0.35)`;ctx.lineWidth=1;for(let i=0;i<n;i++){ctx.beginPath();ctx.moveTo(Math.random()*s,Math.random()*s);ctx.lineTo(Math.random()*s,Math.random()*s);ctx.stroke();}}
+function drawDots(ctx,s,r,g,b,n){ctx.fillStyle=`rgba(${r},${g},${b},0.3)`;for(let i=0;i<n;i++){const sz=1+Math.random()*2;ctx.fillRect(Math.random()*s|0,Math.random()*s|0,sz,sz);}}
 
-                <p class="animate-fade-in-up text-neutral-400 text-sm md:text-base leading-relaxed mb-10 max-w-lg" style="animation-delay: 0.6s;">
-                    عجينة تخمر 72 ساعة ب olive oil إيطالي، صلصة San Marzano DOP، وموزاريلا di Bufala_CAMPAنا طازجة. كل قطعة تحكي قصة نابولي.
-                </p>
+function makeTextures(){
+  const T={};
+  T.grassTop=makeTex((c,s)=>{addNoise(c,s,82,150,52,28);for(let i=0;i<8;i++){c.fillStyle=`rgba(60,120,30,0.3)`;c.fillRect(Math.random()*s|0,Math.random()*s|0,1,1);}});
+  T.grassSide=makeTex((c,s)=>{for(let x=0;x<s;x++)for(let y=0;y<s;y++){const v=(Math.random()-0.5)*18;if(y<4)c.fillStyle=`rgb(${(78+v)|0},${(142+v)|0},${(48+v)|0})`;else if(y===4)c.fillStyle=`rgb(${(100+v)|0},${(110+v)|0},${(55+v)|0})`;else c.fillStyle=`rgb(${(130+v)|0},${(94+v)|0},${(64+v)|0})`;c.fillRect(x,y,1,1);}});
+  T.dirt=makeTex((c,s)=>{addNoise(c,s,130,94,64,22);drawDots(c,s,100,70,40,8);drawLines(c,s,95,65,35,3);});
+  T.stone=makeTex((c,s)=>{addNoise(c,s,135,135,135,20);drawLines(c,s,85,85,85,6);drawDots(c,s,100,100,100,5);for(let i=0;i<3;i++){c.fillStyle=`rgba(160,160,160,0.2)`;const rx=Math.random()*s|0,ry=Math.random()*s|0;c.fillRect(rx,ry,3+Math.random()*3|0,2+Math.random()*2|0);}});
+  T.woodTop=makeTex((c,s)=>{addNoise(c,s,150,110,55,18);c.strokeStyle='rgba(95,65,25,0.45)';c.lineWidth=1;for(let r=2;r<s/2;r+=2){c.beginPath();c.arc(s/2,s/2,r,0,Math.PI*2);c.stroke();}});
+  T.woodSide=makeTex((c,s)=>{addNoise(c,s,124,90,44,16);for(let i=0;i<s;i+=3){c.fillStyle=`rgba(85,55,22,0.22)`;c.fillRect(0,i,s,1);}drawDots(c,s,90,60,25,4);});
+  T.leaves=makeTex((c,s)=>{for(let x=0;x<s;x++)for(let y=0;y<s;y++){const v=(Math.random()-0.5)*30;const g=95+Math.random()*55+v;c.fillStyle=`rgb(${(28+v*0.3)|0},${g|0},${(20+v*0.2)|0})`;c.fillRect(x,y,1,1);}drawDots(c,s,40,100,20,4);});
+  T.sand=makeTex((c,s)=>{addNoise(c,s,232,219,142,16);drawDots(c,s,205,185,105,10);});
+  T.sandstone=makeTex((c,s)=>{addNoise(c,s,202,174,132,18);drawLines(c,s,162,132,92,4);drawDots(c,s,175,145,105,6);});
+  T.snow=makeTex((c,s)=>{addNoise(c,s,238,242,248,10);drawDots(c,s,210,215,225,6);});
+  T.rock=makeTex((c,s)=>{addNoise(c,s,100,96,92,22);drawLines(c,s,70,66,62,7);drawDots(c,s,120,115,110,5);for(let i=0;i<4;i++){c.fillStyle=`rgba(130,125,120,0.25)`;c.fillRect(Math.random()*s|0,Math.random()*s|0,2+Math.random()*4|0,2+Math.random()*3|0);}});
+  return T;
+}
 
-                <div class="animate-fade-in-up flex flex-wrap gap-4 mb-12" style="animation-delay: 0.8s;">
-                    <button onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-3 bg-gradient-to-r from-[#00953E] to-[#00B140] text-white text-sm font-medium px-8 py-4 rounded-full transition-all duration-300 hover:shadow-xl hover:shadow-green-900/30 group">
-                        <span>تصفح المنيو</span>
-                        <span class="iconify text-lg group-hover:-translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" data-icon="lucide:arrow-down-left"></span>
-                    </button>
-                    <a href="#contact" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium px-8 py-4 rounded-full transition-all duration-300">
-                        <span class="iconify text-lg text-[#00B140]" data-icon="lucide:phone"></span>
-                        <span>اتصل الآن</span>
-                    </a>
-                </div>
+function makeMaterials(tex){
+  const M={};
+  const m=(t,o={})=>new THREE.MeshStandardMaterial({map:t,roughness:0.85,metalness:0.05,...o});
+  M[1]=[m(tex.grassTop),m(tex.grassSide),m(tex.dirt),m(tex.dirt),m(tex.grassSide),m(tex.grassSide)];
+  M[2]=Array(6).fill(m(tex.dirt));
+  M[3]=Array(6).fill(m(tex.stone,{roughness:0.9}));
+  M[4]=[m(tex.woodTop),m(tex.woodSide),m(tex.woodTop),m(tex.woodTop),m(tex.woodSide),m(tex.woodSide)];
+  M[5]=Array(6).fill(m(tex.leaves,{roughness:0.7}));
+  M[6]=Array(6).fill(m(tex.sand,{roughness:0.95}));
+  M[7]=Array(6).fill(new THREE.MeshStandardMaterial({color:0x1a6faa,transparent:true,opacity:0.55,roughness:0.1,metalness:0.3}));
+  M[8]=Array(6).fill(m(tex.sandstone));
+  M[9]=Array(6).fill(m(tex.snow,{roughness:0.6}));
+  M[10]=Array(6).fill(m(tex.rock,{roughness:0.95}));
+  return M;
+}
 
-                <div class="animate-fade-in-up flex flex-wrap items-center gap-6 text-sm text-neutral-500" style="animation-delay: 1s;">
-                    <div class="flex items-center gap-2">
-                        <span class="iconify text-[#00B140]" data-icon="lucide:clock"></span>
-                        <span>توصيل 35 دقيقة</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="iconify text-[#00B140]" data-icon="lucide:star"></span>
-                        <span>4.9 من 3,200+</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="iconify text-[#00B140]" data-icon="lucide:truck"></span>
-                        <span>مجاني فوق 60 ر.س</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+// ==============================
+// توليد العالم
+// ==============================
+function noise2D(x,z){const n=Math.sin(x*127.1+z*311.7)*43758.5453;return n-Math.floor(n);}
+function smoothNoise(x,z){const ix=Math.floor(x),iz=Math.floor(z),fx=x-ix,fz=z-iz;const sx=fx*fx*(3-2*fx),sz=fz*fz*(3-2*fz);const a=noise2D(ix,iz),b=noise2D(ix+1,iz),c=noise2D(ix,iz+1),d=noise2D(ix+1,iz+1);return a+(b-a)*sx+(c-a)*sz+(a-b-c+d)*sx*sz;}
+function terrainHeight(x,z){
+  let h=0;
+  h+=smoothNoise(x*0.015,z*0.015)*14;
+  h+=smoothNoise(x*0.04,z*0.04)*6;
+  h+=smoothNoise(x*0.09,z*0.09)*2.5;
+  h+=smoothNoise(x*0.2,z*0.2)*0.8;
+  return Math.floor(h+8);
+}
 
-        <!-- Floating Pizza -->
-        <div class="hidden lg:block absolute left-[6%] top-1/2 -translate-y-1/2 animate-float">
-            <div class="relative">
-                <div class="w-72 h-72 rounded-full overflow-hidden border-[3px] border-white/10 shadow-2xl shadow-black/50">
-                    <img src="https://picsum.photos/seed/naples-pizza-fresh/600/600.jpg" alt="Pizza Napoletana" class="w-full h-full object-cover" />
-                </div>
-                <!-- Italian flag ring -->
-                <div class="absolute -inset-1.5 rounded-full" style="background: conic-gradient(from 0deg, #00953E 0deg 120deg, #FFFFFF 120deg 240deg, #CE2B37 240deg 360deg); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));"></div>
-                <div class="absolute -bottom-3 -right-3 bg-neutral-900/90 border border-white/10 rounded-xl px-3 py-2 backdrop-blur-md">
-                    <div class="flex items-center gap-2">
-                        <div class="flex h-4 rounded-sm overflow-hidden">
-                            <div class="w-3 bg-[#00953E]"></div>
-                            <div class="w-3 bg-white"></div>
-                            <div class="w-3 bg-[#CE2B37]"></div>
-                        </div>
-                        <span class="text-[10px] text-neutral-300">+350 طلب اليوم</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+function generateWorld(){
+  const data=new Uint8Array(WORLD_W*WORLD_D*MAX_H);
+  const idx=(x,y,z)=>x+z*WORLD_W+y*WORLD_W*WORLD_D;
+  const get=(x,y,z)=>(x<0||x>=WORLD_W||y<0||y>=MAX_H||z<0||z>=WORLD_D)?0:data[idx(x,y,z)];
+  const set=(x,y,z,v)=>{if(x>=0&&x<WORLD_W&&y>=0&&y<MAX_H&&z>=0&&z<WORLD_D)data[idx(x,y,z)]=v;};
+  const waterLevel=9;
 
-    <!-- Stats Bar -->
-    <section class="border-y border-white/5 bg-[#0d0d0d]">
-        <div class="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">+60</div>
-                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">نوع بيتزا</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">72h</div>
-                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">تخمير العجينة</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">100%</div>
-                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">مكونات إيطالية</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl md:text-3xl font-bold text-[#00B140] mb-1 font-italian">2018</div>
-                <div class="text-[10px] text-neutral-500 tracking-wider uppercase">منذ سنة التأسيس</div>
-            </div>
-        </div>
-    </section>
+  // تضاريس
+  for(let x=0;x<WORLD_W;x++)for(let z=0;z<WORLD_D;z++){
+    const h=terrainHeight(x,z);
+    const clampedH=Math.min(h,MAX_H-1);
+    for(let y=0;y<=clampedH;y++){
+      if(y===0)set(x,y,z,3);
+      else if(y<clampedH-4)set(x,y,z,3);
+      else if(y<clampedH)set(x,y,z,2);
+      else{
+        if(clampedH>18)set(x,y,z,9); // ثلج على القمم
+        else set(x,y,z,1);
+      }
+    }
+    // ماء
+    for(let y=clampedH+1;y<=waterLevel;y++)set(x,y,z,7);
+    // رمل على الشاطئ
+    if(clampedH<=waterLevel&&clampedH>=waterLevel-2){set(x,clampedH,z,6);if(clampedH>0)set(x,clampedH-1,z,6);}
+  }
 
-    <!-- About Section -->
-    <section id="about" class="py-20 md:py-24 border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <div class="relative">
-                    <div class="rounded-3xl overflow-hidden border border-white/10 aspect-[4/3]">
-                        <img src="https://picsum.photos/seed/italian-chef-pizza-making/800/600.jpg" alt="Italian Chef" class="w-full h-full object-cover opacity-70" />
-                    </div>
-                    <div class="absolute -bottom-6 -left-6 bg-neutral-900 border border-white/10 rounded-2xl p-5 backdrop-blur-md">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-8 rounded-full overflow-hidden shadow">
-                                <div class="w-6 bg-[#00953E]"></div>
-                                <div class="w-6 bg-white"></div>
-                                <div class="w-6 bg-[#CE2B37]"></div>
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold">شيف ماركو روسي</div>
-                                <div class="text-[10px] text-neutral-500">خبرة 20 عام في نابولي</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="flex h-5 rounded-full overflow-hidden">
-                            <div class="w-4 bg-[#00953E]"></div>
-                            <div class="w-4 bg-white"></div>
-                            <div class="w-4 bg-[#CE2B37]"></div>
-                        </div>
-                        <span class="text-xs text-neutral-500 tracking-wider uppercase">La Nostra Storia</span>
-                    </div>
-                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-6">قصة <span class="text-[#00B140] font-italian italic">إيطاليا</span> في كل قطعة</h2>
-                    <p class="text-neutral-400 text-sm leading-relaxed mb-4">
-                        بدأت رحلتنا في 2018 عندما قرر شيف ماركو روسي أن يجلب طعم نابولي الحقيقي إلى المملكة. كل بيتزا لدينا محضّرة بعجينة تخمر لمدة 72 ساعة، ممدودة باليد، ومخبوزة في فرن حجري على درجة 450° مئوية لـ 90 ثانية فقط.
-                    </p>
-                    <p class="text-neutral-400 text-sm leading-relaxed mb-8">
-                        نستورد مكوناتنا مباشرة من إيطاليا: طماطم San Marzano DOP من منطقة كامبانيا، زيت زيتون بكر ممتاز من توسكانا، وموزاريلا di Bufala طازجة يومياً.
-                    </p>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
-                            <span class="iconify text-2xl text-[#00B140] mx-auto mb-2" data-icon="lucide:award"></span>
-                            <div class="text-[10px] text-neutral-500">معتمد AVPN</div>
-                        </div>
-                        <div class="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
-                            <span class="iconify text-2xl text-[#00B140] mx-auto mb-2" data-icon="lucide:flame"></span>
-                            <div class="text-[10px] text-neutral-500">فرن حجري</div>
-                        </div>
-                        <div class="text-center p-4 rounded-2xl bg-white/5 border border-white/5">
-                            <span class="iconify text-2xl text-[#00B140] mx-auto mb-2" data-icon="lucide:leaf"></span>
-                            <div class="text-[10px] text-neutral-500">DOP مكونات</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  // كهوف بسيطة
+  for(let i=0;i<120;i++){
+    const cx=5+Math.floor(Math.random()*(WORLD_W-10));
+    const cz=5+Math.floor(Math.random()*(WORLD_D-10));
+    const cy=2+Math.floor(Math.random()*8);
+    const r=1+Math.floor(Math.random()*2);
+    for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++)for(let dz=-r;dz<=r;dz++){
+      if(dx*dx+dy*dy+dz*dz<=r*r+0.5){
+        const bx=cx+dx,by=cy+dy,bz=cz+dz;
+        if(get(bx,by,bz)===3)set(bx,by,bz,0);
+      }
+    }
+  }
 
-    <!-- Menu Section -->
-    <section id="menu" class="py-24 md:py-32 relative">
-        <div class="glow-green absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-20"></div>
-        <div class="relative z-10 max-w-7xl mx-auto px-4 md:px-6">
-            <div class="text-center mb-14">
-                <div class="flex items-center justify-center gap-3 mb-4">
-                    <div class="flex h-5 rounded-full overflow-hidden">
-                        <div class="w-4 bg-[#00953E]"></div>
-                        <div class="w-4 bg-white"></div>
-                        <div class="w-4 bg-[#CE2B37]"></div>
-                    </div>
-                    <span class="text-xs text-neutral-500 tracking-wider uppercase">Il Nostro Menu</span>
-                    <div class="flex h-5 rounded-full overflow-hidden">
-                        <div class="w-4 bg-[#00953E]"></div>
-                        <div class="w-4 bg-white"></div>
-                        <div class="w-4 bg-[#CE2B37]"></div>
-                    </div>
-                </div>
-                <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-3">قائمة <span class="text-[#00B140] font-italian italic">البيتزا</span></h2>
-                <p class="text-neutral-400 max-w-md mx-auto text-sm">كل وصفة أصلية من إيطاليا، محضّرة بحب وشغف</p>
-            </div>
+  // أشجار
+  for(let i=0;i<100;i++){
+    const tx=3+Math.floor(Math.random()*(WORLD_W-6));
+    const tz=3+Math.floor(Math.random()*(WORLD_D-6));
+    let th=-1;
+    for(let y=MAX_H-1;y>=0;y--){if(get(tx,y,tz)===1){th=y;break;}}
+    if(th<10||th>18)continue;
+    if(get(tx,th,tz)!==1)continue;
+    const treeH=4+Math.floor(Math.random()*3);
+    for(let y=1;y<=treeH;y++)set(tx,th+y,tz,4);
+    const leafBase=th+treeH-1;
+    for(let dy=0;dy<=3;dy++){
+      const r=dy<2?2:1;
+      for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){
+        if(dx===0&&dz===0&&dy<2)continue;
+        if(Math.abs(dx)===r&&Math.abs(dz)===r&&Math.random()>0.45)continue;
+        if(get(tx+dx,leafBase+dy,tz+dz)===0)set(tx+dx,leafBase+dy,tz+dz,5);
+      }
+    }
+    set(tx,leafBase+4,tz,5);
+    if(Math.random()>0.4){set(tx+1,leafBase+4,tz,5);set(tx-1,leafBase+4,tz,5);}
+    if(Math.random()>0.4){set(tx,leafBase+4,tz+1,5);set(tx,leafBase+4,tz-1,5);}
+  }
 
-            <div class="flex flex-wrap justify-center gap-2 mb-12">
-                <button onclick="filterMenu('all')" class="category-btn active px-5 py-2 rounded-full text-xs border border-white/10 transition-all duration-300" data-cat="all">الكل</button>
-                <button onclick="filterMenu('classiche')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="classiche">كلاسيكية Classiche</button>
-                <button onclick="filterMenu('speciali')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="speciali">مميزة Speciali</button>
-                <button onclick="filterMenu('gourmet')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="gourmet">جورميه Gourmet</button>
-                <button onclick="filterMenu('sides')" class="category-btn px-5 py-2 rounded-full text-xs border border-white/10 text-neutral-400 transition-all duration-300" data-cat="sides">إضافات Sides</button>
-            </div>
+  // صخور متناثرة
+  for(let i=0;i<40;i++){
+    const rx=2+Math.floor(Math.random()*(WORLD_W-4));
+    const rz=2+Math.floor(Math.random()*(WORLD_D-4));
+    let rh=-1;
+    for(let y=MAX_H-1;y>=0;y--){if(BLOCK_TYPES[get(rx,y,rz)]?.solid){rh=y;break;}}
+    if(rh<0||rh>15)continue;
+    const rs=1+Math.floor(Math.random()*2);
+    for(let dx=0;dx<rs;dx++)for(let dy=0;dy<rs;dy++)for(let dz=0;dz<rs;dz++){
+      if(get(rx+dx,rh+1+dy,rz+dz)===0)set(rx+dx,rh+1+dy,rz+dz,10);
+    }
+  }
 
-            <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-        </div>
-    </section>
+  // زهور (أوراق ملونة على الأرض) - نستخدم أوراق كزهور
+  for(let i=0;i<80;i++){
+    const fx=2+Math.floor(Math.random()*(WORLD_W-4));
+    const fz=2+Math.floor(Math.random()*(WORLD_D-4));
+    let fh=-1;
+    for(let y=MAX_H-1;y>=0;y--){if(get(fx,y,fz)===1){fh=y;break;}}
+    if(fh<0)continue;
+    if(get(fx,fh+1,fz)===0)set(fx,fh+1,fz,5);
+  }
 
-    <!-- Specials -->
-    <section id="specials" class="py-24 md:py-28 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-4 md:px-6">
-            <div class="text-center mb-14">
-                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00953E]/10 border border-[#00953E]/20 text-xs text-[#00B140] tracking-wider mb-4">
-                    <span class="iconify" data-icon="lucide:sparkles"></span>
-                    Offerte Speciali — عروض خاصة
-                </span>
-                <h2 class="text-3xl md:text-5xl font-bold tracking-tight">عروض <span class="text-[#00B140] font-italian italic">الأسبوع</span></h2>
-            </div>
-            <div class="grid md:grid-cols-2 gap-5">
-                <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#00953E]/10 to-neutral-900 group hover:border-[#00953E]/30 transition-all duration-500">
-                    <div class="absolute top-0 left-0 right-0 h-1 italian-stripe"></div>
-                    <div class="p-7 md:p-9 flex flex-col md:flex-row gap-7 items-center">
-                        <div class="w-36 h-36 rounded-2xl overflow-hidden flex-shrink-0">
-                            <img src="https://picsum.photos/seed/family-italian-pizza/400/400.jpg" alt="عائلي" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        </div>
-                        <div class="flex-1 text-center md:text-right">
-                            <div class="inline-block badge-popular text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3">وفر 35%</div>
-                            <h3 class="text-lg font-bold mb-1 font-italian">La Famiglia</h3>
-                            <p class="text-neutral-400 text-xs mb-4">بيتزا كبيرة + بيتزا وسط + 4 مشروبات + 2 تيراميسو</p>
-                            <div class="flex items-center justify-center md:justify-start gap-3">
-                                <span class="text-2xl font-bold text-[#00B140]">129 ر.س</span>
-                                <span class="text-neutral-500 line-through text-xs">199 ر.س</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#CE2B37]/10 to-neutral-900 group hover:border-[#CE2B37]/30 transition-all duration-500">
-                    <div class="absolute top-0 left-0 right-0 h-1 italian-stripe"></div>
-                    <div class="p-7 md:p-9 flex flex-col md:flex-row gap-7 items-center">
-                        <div class="w-36 h-36 rounded-2xl overflow-hidden flex-shrink-0">
-                            <img src="https://picsum.photos/seed/couple-pizza-deal/400/400.jpg" alt="ثنائي" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        </div>
-                        <div class="flex-1 text-center md:text-right">
-                            <div class="inline-block badge-new text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3">عرض جديد</div>
-                            <h3 class="text-lg font-bold mb-1 font-italian">Il Duo Perfetto</h3>
-                            <p class="text-neutral-400 text-xs mb-4">بيتزا وسط + أجنحة دجاج 8 قطع + مشروبين + بريدي</p>
-                            <div class="flex items-center justify-center md:justify-start gap-3">
-                                <span class="text-2xl font-bold text-[#00B140]">79 ر.س</span>
-                                <span class="text-neutral-500 line-through text-xs">110 ر.س</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  return{data,get,set,idx};
+}
 
-    <!-- Contact -->
-    <section id="contact" class="py-24 md:py-28 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-4 md:px-6">
-            <div class="grid lg:grid-cols-2 gap-14">
-                <div>
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="flex h-5 rounded-full overflow-hidden"><div class="w-4 bg-[#00953E]"></div><div class="w-4 bg-white"></div><div class="w-4 bg-[#CE2B37]"></div></div>
-                        <span class="text-xs text-neutral-500 tracking-wider uppercase">Contattaci</span>
-                    </div>
-                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-6">تواصل <span class="text-[#00B140] font-italian italic">معنا</span></h2>
-                    <p class="text-neutral-400 text-sm leading-relaxed mb-10">نرحب بك دائماً! اتصل بنا أو زرنا لتحظى بتجربة إيطالية حقيقية.</p>
-                    <div class="space-y-5">
-                        <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:phone"></span></div>
-                            <div><div class="text-[10px] text-neutral-500 mb-0.5">اتصل بنا</div><div class="text-sm font-medium" dir="ltr">+966 50 123 4567</div></div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:map-pin"></span></div>
-                            <div><div class="text-[10px] text-neutral-500 mb-0.5">العنوان</div><div class="text-sm font-medium">شارع الأمير سلطان، حي الروضة، جدة</div></div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:clock"></span></div>
-                            <div><div class="text-[10px] text-neutral-500 mb-0.5">ساعات العمل</div><div class="text-sm font-medium">يومياً 12:00 ظهراً — 2:00 صباحاً</div></div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0"><span class="iconify text-lg text-[#00B140]" data-icon="lucide:message-circle"></span></div>
-                            <div><div class="text-[10px] text-neutral-500 mb-0.5">واتساب</div><div class="text-sm font-medium" dir="ltr">+966 50 123 4567</div></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="relative">
-                    <div class="rounded-3xl overflow-hidden border border-white/10 h-full min-h-[380px]">
-                        <img src="https://picsum.photos/seed/italian-restaurant-interior-warm/800/600.jpg" alt="المطعم" class="w-full h-full object-cover opacity-55" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-7">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="flex gap-0.5">
-                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
-                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
-                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
-                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
-                                    <span class="iconify text-yellow-500 text-sm" data-icon="lucide:star"></span>
-                                </div>
-                                <span class="text-xs text-neutral-300">4.9 من 3,247 تقييم على جوجل</span>
-                            </div>
-                            <p class="text-neutral-400 text-xs italic font-serif leading-relaxed">"أقرب شيء لبيتزا نابولي الحقيقية خارج إيطاليا! العجينة رقيقة ومنفوخة والـ cornicione مثالي. Grazie mille!"</p>
-                            <p class="text-[10px] text-neutral-600 mt-2">— أحمد م، جدة</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+// ==============================
+// بناء شبكة المكعبات
+// ==============================
+const FACE_DIRS=[
+  {dir:[1,0,0],corners:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]]},
+  {dir:[-1,0,0],corners:[[0,0,1],[0,1,1],[0,1,0],[0,0,0]]},
+  {dir:[0,1,0],corners:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]]},
+  {dir:[0,-1,0],corners:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]},
+  {dir:[0,0,1],corners:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]},
+  {dir:[0,0,-1],corners:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]},
+];
 
-    <!-- Footer -->
-    <footer class="border-t border-white/5 py-10">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#00953E] to-[#006B2D] flex items-center justify-center"><span class="iconify text-white text-xs" data-icon="lucide:pizza"></span></div>
-                    <span class="text-sm font-bold">لا بيتسا إيطاليانا</span>
-                    <div class="flex h-4 rounded-full overflow-hidden"><div class="w-3 bg-[#00953E]"></div><div class="w-3 bg-white"></div><div class="w-3 bg-[#CE2B37]"></div></div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:instagram"></span></a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:twitter"></span></a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:facebook"></span></a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#00953E]/20 hover:border-[#00953E]/30 transition-all duration-300"><span class="iconify text-sm text-neutral-400" data-icon="lucide:youtube"></span></a>
-                </div>
-                <div class="flex items-center gap-4">
-                    <p class="text-[10px] text-neutral-600">© 2025 La Pizza Italiana. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+function buildWorldMesh(world,mats){
+  const meshes=[];
+  for(let bt=1;bt<=10;bt++){
+    const pos=[],nrm=[],uvs=[],idx=[];
+    let vc=0;
+    for(let x=0;x<WORLD_W;x++)for(let y=0;y<MAX_H;y++)for(let z=0;z<WORLD_D;z++){
+      if(world.get(x,y,z)!==bt)continue;
+      for(let f=0;f<6;f++){
+        const face=FACE_DIRS[f];
+        const nx=x+face.dir[0],ny=y+face.dir[1],nz=z+face.dir[2];
+        const nb=world.get(nx,ny,nz);
+        if(nb!==0&&(BLOCK_TYPES[nb]?.solid||nb===bt))continue;
+        for(const c of face.corners){pos.push(x+c[0],y+c[1],z+c[2]);nrm.push(face.dir[0],face.dir[1],face.dir[2]);uvs.push(c[0]===0?0:1,c[1]===0?0:1);}
+        idx.push(vc,vc+1,vc+2,vc,vc+2,vc+3);vc+=4;
+      }
+    }
+    if(!pos.length)continue;
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    geo.setAttribute('normal',new THREE.Float32BufferAttribute(nrm,3));
+    geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+    geo.setIndex(idx);
+    const isWater=bt===7;
+    const mat=isWater?mats[bt][0]:mats[bt][0];
+    const mesh=new THREE.Mesh(geo,mat);
+    if(isWater)mesh.renderOrder=1;
+    mesh.castShadow=false;
+    mesh.receiveShadow=!isWater;
+    meshes.push(mesh);
+  }
+  return meshes;
+}
 
-    <!-- Cart Sidebar -->
-    <div id="cart-overlay" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm hidden" onclick="closeCart()"></div>
-    <div id="cart-sidebar" class="fixed top-0 left-0 bottom-0 z-[70] w-full max-w-md bg-[#0f0f0f] border-r border-white/10 transform -translate-x-full transition-transform duration-500 ease-out flex flex-col">
-        <div class="p-5 border-b border-white/10 flex items-center justify-between">
-            <h3 class="text-base font-bold flex items-center gap-2"><span class="iconify text-[#00B140]" data-icon="lucide:shopping-bag"></span>سلة الطلبات</h3>
-            <button onclick="closeCart()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><span class="iconify text-sm" data-icon="lucide:x"></span></button>
-        </div>
-        <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-3">
-            <div id="cart-empty" class="flex flex-col items-center justify-center h-full text-center">
-                <span class="iconify text-4xl text-neutral-700 mb-3" data-icon="lucide:shopping-bag"></span>
-                <p class="text-neutral-500 text-sm">سلتك فارغة</p>
-                <p class="text-neutral-600 text-[10px] mt-1">أضف بيتزا إيطالية لذيذة!</p>
-            </div>
-        </div>
-        <div id="cart-footer" class="p-5 border-t border-white/10 hidden">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-neutral-500 text-xs">المجموع الفرعي</span>
-                <span id="cart-subtotal" class="text-sm font-medium">0 ر.س</span>
-            </div>
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-neutral-500 text-xs">التوصيل</span>
-                <span id="cart-delivery" class="text-xs text-[#00B140]">مجاني</span>
-            </div>
-            <div class="flex items-center justify-between mb-5 pt-3 border-t border-white/5">
-                <span class="text-sm font-medium">الإجمالي</span>
-                <span id="cart-total" class="text-xl font-bold text-[#00B140]">0 ر.س</span>
-            </div>
-            <button onclick="openCheckout()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3.5 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-green-900/30 flex items-center justify-center gap-2 text-sm">
-                <span>متابعة الدفع</span>
-                <span class="iconify" data-icon="lucide:arrow-left"></span>
-            </button>
-        </div>
-    </div>
+function rebuildMeshes(world,mats,scene,old){
+  old.forEach(m=>scene.remove(m));
+  return buildWorldMesh(world,mats);
+}
 
-    <!-- Size Modal -->
-    <div id="size-modal" class="fixed inset-0 z-[80] flex items-center justify-center p-4 hidden">
-        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeSizeModal()"></div>
-        <div class="relative bg-[#111] border border-white/10 rounded-3xl p-7 w-full max-w-sm animate-scale-in">
-            <button onclick="closeSizeModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><span class="iconify text-xs" data-icon="lucide:x"></span></button>
-            <h3 id="modal-title" class="text-base font-bold mb-1 font-italian"></h3>
-            <p class="text-neutral-600 text-[10px] mb-5">Scegli la dimensione — اختر الحجم</p>
-            <div id="modal-sizes" class="space-y-2.5 mb-5"></div>
-            <div class="flex items-center gap-2 mb-5">
-                <button onclick="changeQty(-1)" class="counter-btn w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10"><span class="iconify" data-icon="lucide:minus"></span></button>
-                <span id="modal-qty" class="text-lg font-bold w-10 text-center">1</span>
-                <button onclick="changeQty(1)" class="counter-btn w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10"><span class="iconify" data-icon="lucide:plus"></span></button>
-            </div>
-            <button onclick="confirmAdd()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 text-sm">
-                <span>أضف للسلة</span>
-                <span class="iconify" data-icon="lucide:plus"></span>
-            </button>
-        </div>
-    </div>
+// ==============================
+// التهيئة
+// ==============================
+const textures=makeTextures();
+const materials=makeMaterials(textures);
+const world=generateWorld();
 
-    <!-- Checkout Modal -->
-    <div id="checkout-modal" class="fixed inset-0 z-[80] flex items-end md:items-center justify-center p-0 md:p-4 hidden">
-        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCheckout()"></div>
-        <div class="relative bg-[#0f0f0f] border border-white/10 rounded-t-3xl md:rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
-            <!-- Steps -->
-            <div class="p-6 border-b border-white/5">
-                <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-base font-bold flex items-center gap-2"><span class="iconify text-[#00B140]" data-icon="lucide:credit-card"></span>إتمام الطلب</h3>
-                    <button onclick="closeCheckout()" class="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10"><span class="iconify text-xs" data-icon="lucide:x"></span></button>
-                </div>
-                <div class="flex items-center justify-center gap-2">
-                    <div id="step1" class="step-active w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                    <div class="w-8 h-px bg-white/10"></div>
-                    <div id="step2" class="step-pending w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">2</div>
-                    <div class="w-8 h-px bg-white/10"></div>
-                    <div id="step3" class="step-pending w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">3</div>
-                </div>
-                <div class="flex items-center justify-between mt-2 text-[9px] text-neutral-600 px-1">
-                    <span>البيانات</span>
-                    <span>الدفع</span>
-                    <span>التأكيد</span>
-                </div>
-            </div>
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(72,window.innerWidth/window.innerHeight,0.1,300);
 
-            <!-- Step 1: Info -->
-            <div id="checkout-step1" class="p-6 space-y-4">
-                <div>
-                    <label class="text-[10px] text-neutral-500 mb-1.5 block">الاسم الكامل *</label>
-                    <input id="inp-name" type="text" placeholder="مثال: محمد أحمد" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600" />
-                </div>
-                <div>
-                    <label class="text-[10px] text-neutral-500 mb-1.5 block">رقم الجوال *</label>
-                    <input id="inp-phone" type="tel" placeholder="05XXXXXXXX" dir="ltr" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600 text-left" />
-                </div>
-                <div>
-                    <label class="text-[10px] text-neutral-500 mb-1.5 block">عنوان التوصيل *</label>
-                    <textarea id="inp-address" rows="2" placeholder="الحي، الشارع، رقم المبنى، الشقة" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600 resize-none"></textarea>
-                </div>
-                <div>
-                    <label class="text-[10px] text-neutral-500 mb-1.5 block">ملاحظات (اختياري)</label>
-                    <input id="inp-notes" type="text" placeholder="مثال: بدون بصل، حار زيادة..." class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600" />
-                </div>
-                <div id="step1-error" class="text-[10px] text-red-400 hidden">يرجى ملء جميع الحقول المطلوبة</div>
-                <button onclick="goToStep2()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3.5 rounded-2xl transition-all text-sm flex items-center justify-center gap-2">
-                    <span>التالي — الدفع</span>
-                    <span class="iconify" data-icon="lucide:arrow-left"></span>
-                </button>
-            </div>
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
 
-            <!-- Step 2: Payment -->
-            <div id="checkout-step2" class="p-6 space-y-4 hidden">
-                <!-- Order Summary Mini -->
-                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 mb-2">
-                    <div class="text-[10px] text-neutral-500 mb-2">ملخص الطلب</div>
-                    <div id="checkout-summary" class="space-y-1.5"></div>
-                    <div class="border-t border-white/5 mt-3 pt-3 flex items-center justify-between">
-                        <span class="text-xs font-medium">الإجمالي</span>
-                        <span id="checkout-total" class="text-sm font-bold text-[#00B140]">0 ر.س</span>
-                    </div>
-                </div>
+// سماء احترافية
+const sky=new Sky();
+sky.scale.setScalar(10000);
+scene.add(sky);
+const skyU=sky.material.uniforms;
+skyU['turbidity'].value=6;
+skyU['rayleigh'].value=2.5;
+skyU['mieCoefficient'].value=0.005;
+skyU['mieDirectionalG'].value=0.82;
+const sunPos=new THREE.Vector3();
+const phi=THREE.MathUtils.degToRad(88);
+const theta=THREE.MathUtils.degToRad(200);
+sunPos.setFromSphericalCoords(1,phi,theta);
+skyU['sunPosition'].value.copy(sunPos);
 
-                <!-- Payment Method -->
-                <div class="text-[10px] text-neutral-500 mb-1">طريقة الدفع</div>
-                <label class="flex items-center gap-3 p-4 rounded-2xl border-2 border-[#00953E] bg-[#00953E]/5 cursor-pointer">
-                    <input type="radio" name="payment" value="paypal" checked class="hidden" />
-                    <div class="w-10 h-10 rounded-xl bg-[#0070BA]/10 flex items-center justify-center">
-                        <span class="iconify text-xl text-[#0070BA]" data-icon="lucide:wallet"></span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-sm font-medium">PayPal</div>
-                        <div class="text-[10px] text-neutral-500">دفع آمن ومشفر عبر PayPal</div>
-                    </div>
-                    <div class="w-5 h-5 rounded-full border-2 border-[#00953E] flex items-center justify-center">
-                        <div class="w-2.5 h-2.5 rounded-full bg-[#00953E]"></div>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/5 cursor-pointer hover:border-white/20 transition-colors" onclick="selectCash(this)">
-                    <input type="radio" name="payment" value="cash" class="hidden" />
-                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                        <span class="iconify text-xl text-neutral-400" data-icon="lucide:banknote"></span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-sm font-medium text-neutral-400">نقداً عند الاستلام</div>
-                        <div class="text-[10px] text-neutral-600">ادفع للسائق عند التوصيل</div>
-                    </div>
-                    <div class="w-5 h-5 rounded-full border-2 border-white/20"></div>
-                </label>
+// إضاءة
+const ambLight=new THREE.AmbientLight(0xffffff,0.4);
+scene.add(ambLight);
+const dirLight=new THREE.DirectionalLight(0xfff4e0,1.8);
+dirLight.position.set(40,60,30);
+dirLight.castShadow=true;
+dirLight.shadow.mapSize.width=2048;
+dirLight.shadow.mapSize.height=2048;
+dirLight.shadow.camera.near=1;
+dirLight.shadow.camera.far=150;
+dirLight.shadow.camera.left=-50;
+dirLight.shadow.camera.right=50;
+dirLight.shadow.camera.top=50;
+dirLight.shadow.camera.bottom=-50;
+dirLight.shadow.bias=-0.001;
+scene.add(dirLight);
+const hemiLight=new THREE.HemisphereLight(0x87CEEB,0x556B2F,0.35);
+scene.add(hemiLight);
 
-                <!-- PayPal Form (shown when PayPal selected) -->
-                <div id="paypal-form" class="space-y-3 pt-2">
-                    <div>
-                        <label class="text-[10px] text-neutral-500 mb-1.5 block">البريد الإلكتروني PayPal *</label>
-                        <input id="inp-paypal" type="email" placeholder="example@email.com" dir="ltr" class="input-field w-full px-4 py-3 rounded-xl text-sm text-white placeholder-neutral-600 text-left" />
-                    </div>
-                    <div class="flex items-center gap-2 p-3 rounded-xl bg-[#0070BA]/5 border border-[#0070BA]/10">
-                        <span class="iconify text-[#0070BA] text-sm" data-icon="lucide:shield-check"></span>
-                        <span class="text-[10px] text-neutral-400">معاملة محمية بتشفير SSL 256-bit</span>
-                    </div>
-                </div>
+// ضباب
+scene.fog=new THREE.FogExp2(0xc8dce8,0.008);
 
-                <div id="step2-error" class="text-[10px] text-red-400 hidden">يرجى إدخال بريد PayPal</div>
-                <div class="flex gap-3 pt-2">
-                    <button onclick="goToStep1()" class="flex-1 bg-white/5 border border-white/10 text-neutral-300 text-sm py-3 rounded-2xl hover:bg-white/10 transition-colors">رجوع</button>
-                    <button onclick="goToStep3()" class="flex-1 bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3 rounded-2xl transition-all text-sm">تأكيد الطلب</button>
-                </div>
-            </div>
+// شبكة العالم
+let worldMeshes=buildWorldMesh(world,materials);
+worldMeshes.forEach(m=>scene.add(m));
 
-            <!-- Step 3: Confirmation -->
-            <div id="checkout-step3" class="p-6 hidden">
-                <div class="text-center py-6">
-                    <div class="order-success inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#00953E]/10 border-2 border-[#00953E] mb-5">
-                        <span class="iconify text-4xl text-[#00B140]" data-icon="lucide:check"></span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2 font-italian">Grazie!</h3>
-                    <p class="text-neutral-400 text-sm mb-1">تم تأكيد طلبك بنجاح</p>
-                    <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2 mt-3 mb-5">
-                        <span class="text-[10px] text-neutral-500">رقم الطلب</span>
-                        <span id="order-number" class="text-sm font-bold text-[#00B140] font-mono">#LP-00000</span>
-                    </div>
-                    <div class="bg-white/5 rounded-2xl p-5 text-right border border-white/5 mb-5">
-                        <div id="confirmation-details" class="space-y-2 text-xs"></div>
-                    </div>
-                    <div class="flex items-center justify-center gap-2 text-xs text-neutral-500 mb-6">
-                        <span class="iconify text-[#00B140]" data-icon="lucide:clock"></span>
-                        <span>التوصيل المتوقع خلال 35-45 دقيقة</span>
-                    </div>
-                    <button onclick="finishOrder()" class="w-full bg-gradient-to-r from-[#00953E] to-[#00B140] text-white font-medium py-3.5 rounded-2xl transition-all text-sm">
-                        تم، شكراً!
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+// ماء عاكس
+const waterGeo=new THREE.PlaneGeometry(WORLD_W+20,WORLD_D+20);
+const water=new Water(waterGeo,{
+  textureWidth:256,
+  textureHeight:256,
+  waterNormals:new THREE.TextureLoader().load('https://unpkg.com/three@0.160.0/examples/textures/waternormals.jpg',(t)=>{t.wrapS=t.wrapT=THREE.RepeatWrapping;}),
+  sunDirection:sunPos.clone().normalize(),
+  sunColor:0xffffff,
+  waterColor:0x006699,
+  distortionScale:3.7,
+  fog:scene.fog!==undefined,
+});
+water.rotation.x=-Math.PI/2;
+water.position.set(WORLD_W/2,9.3,WORLD_D/2);
+water.renderOrder=2;
+scene.add(water);
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-20 left-4 z-[90] space-y-2"></div>
+// ==============================
+// غيوم ثلاثية الأبعاد
+// ==============================
+const cloudGroup=new THREE.Group();
+const cloudMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,metalness:0,transparent:true,opacity:0.85});
+for(let i=0;i<25;i++){
+  const cloud=new THREE.Group();
+  const np=3+Math.floor(Math.random()*5);
+  for(let j=0;j<np;j++){
+    const w=3+Math.random()*6,h=1+Math.random()*1.8,d=3+Math.random()*5;
+    const geo=new THREE.BoxGeometry(w,Math.max(0.5,h),d);
+    const mesh=new THREE.Mesh(geo,cloudMat);
+    mesh.position.set((Math.random()-0.5)*7,(Math.random()-0.5)*0.6,(Math.random()-0.5)*4);
+    mesh.castShadow=true;
+    cloud.add(mesh);
+  }
+  cloud.position.set(Math.random()*WORLD_W*1.5-WORLD_W*0.25,28+Math.random()*10,Math.random()*WORLD_D*1.5-WORLD_D*0.25);
+  cloud.userData.speed=0.2+Math.random()*0.6;
+  cloudGroup.add(cloud);
+}
+scene.add(cloudGroup);
 
-    <script>
-        // ==================== DATA ====================
-        const menuItems = [
-            { id:1, name:"مارغريتا", nameIt:"Margherita", category:"classiche", desc:"صلصة San Marzano DOP، موزاريلا فريسكا، ريحان طازج، زيت زيتون بكر", image:"https://picsum.photos/seed/margherita-naples-2024/600/400.jpg", prices:{small:32,medium:42,large:52}, badge:null, spicy:false },
-            { id:2, name:"بيبروني", nameIt:"Diavola", category:"classiche", desc:"بيبروني إيطالي حار، موزاريلا، صلصة طماطم، أوريغانو كالابري", image:"https://picsum.photos/seed/diavola-pepperoni-spicy/600/400.jpg", prices:{small:38,medium:48,large:58}, badge:"popular", spicy:true },
-            { id:3, name:"كوارترو فورماجي", nameIt:"Quattro Formaggi", category:"classiche", desc:"موزاريلا، غورغونزولا، بارميزان، فونتينا، عسل مقطر", image:"https://picsum.photos/seed/quattro-formaggi-italian/600/400.jpg", prices:{small:42,medium:52,large:65}, badge:null, spicy:false },
-            { id:4, name:"بروsciوتو روكولا", nameIt:"Prosciutto e Rucola", category:"classiche", desc:"بروشيتو دي بارما، روكولا طازجة، شرائح بارميزان، زيت زيتون", image:"https://picsum.photos/seed/prosciutto-rucola-parma/600/400.jpg", prices:{small:48,medium:60,large:72}, badge:null, spicy:false },
-            { id:5, name:"دجاج باربكيو", nameIt:"Pollo BBQ", category:"speciali", desc:"صدور دجاج مشوية، صوص باربكيو مدخن، بصل أحمر مقرمش، جبنة شيدر", image:"https://picsum.photos/seed/chicken-bbq-pizza-ital/600/400.jpg", prices:{small:40,medium:50,large:62}, badge:"popular", spicy:false },
-            { id:6, name:"سي فود فراسيياتي", nameIt:"Frutti di Mare", category:"speciali", desc:"روبيان، كاليماري، مussels، صوص مارينارا، ثوم، بقدونس، ليمون", image:"https://picsum.photos/seed/frutti-mare-seafood/600/400.jpg", prices:{small:55,medium:68,large:82}, badge:"new", spicy:false },
-            { id:7, name:"كالابريزي حارة", nameIt:"Calabrese Piccante", category:"speciali", desc:"سلامي كالابريا حار، فلفل حار، بصل أحمر، موزاريلا مزدوجة", image:"https://picsum.photos/seed/calabrese-spicy-salami/600/400.jpg", prices:{small:42,medium:52,large:64}, badge:"spicy", spicy:true },
-            { id:8, name:"ترافو نيردي", nameIt:"Tartufo Nero", category:"gourmet", desc:"كريمة ترافولاتا، فطر بورتشيني، ترافل أسود، جبنة تاليدجو، زبدة", image:"https://picsum.photos/seed/tartufo-nero-truffle/600/400.jpg", prices:{small:65,medium:85,large:105}, badge:"new", spicy:false },
-            { id:9, name:"بارما إليت", nameIt:"Parma Elite", category:"gourmet", desc:"بروشيتو 24 شهر، جبنة بوراتا طازجة، طماطم كرزية، ريحان، مودينا بلساميك", image:"https://picsum.photos/seed/parma-elite-burrata/600/400.jpg", prices:{small:62,medium:80,large:98}, badge:null, spicy:false },
-            { id:10, name:"كربونارا بيتزا", nameIt:"Carbonara Pizza", category:"gourmet", desc:"غواتشالي أدوباتي، صفار بيض، بيكورينو رومانو، فلفل أسود مطحون", image:"https://picsum.photos/seed/carbonara-artisan-pizza/600/400.jpg", prices:{small:55,medium:70,large:88}, badge:"popular", spicy:false },
-            { id:11, name:"أجنحة دجاج", nameIt:"Ali di Pollo", category:"sides", desc:"8 قطع أجنحة مقرمشة: باربكيو / حار كالابريا / عسل خردل", image:"https://picsum.photos/seed/chicken-wings-italian/600/400.jpg", prices:{small:28,medium:38,large:null}, badge:null, spicy:false, isSide:true },
-            { id:12, name:"فوكاتشيا بالثوم", nameIt:"Focaccia all'Aglio", category:"sides", desc:"خبز فوكاتشيا إيطالي مع ثوم وزبدة وروزماري وملح بحر", image:"https://picsum.photos/seed/garlic-focaccia-bread/600/400.jpg", prices:{small:16,medium:24,large:null}, badge:null, spicy:false, isSide:true },
-            { id:13, name:"بريدي إيطالي", nameIt:"Bruschetta Classica", category:"sides", desc:"خبز كامباني محمص مع طماطم ناضجة، ثوم، ريحان، زيت زيتون", image:"https://picsum.photos/seed/bruschetta-tomato-basil/600/400.jpg", prices:{small:18,medium:26,large:null}, badge:null, spicy:false, isSide:true },
-            { id:14, name:"تيراميسو", nameIt:"Tiramisù", category:"sides", desc:"حلى تيراميسو كلاسيكي: ماسكاربوني، سافوياردي، إسبريسو، كاكاو", image:"https://picsum.photos/seed/tiramisu-dessert-classic/600/400.jpg", prices:{small:22,medium:32,large:null}, badge:null, spicy:false, isSide:true },
-            { id:15, name:"باني كوتا", nameIt:"Panna Cotta", category:"sides", desc:"كريمة إيطالية مهروسة مع صوص الفراولة الطازجة والنعناع", image:"https://picsum.photos/seed/panna-cotta-strawberry/600/400.jpg", prices:{small:20,medium:28,large:null}, badge:null, spicy:false, isSide:true }
-        ];
+// ==============================
+// جسيمات محيطية (غبار/حبوب)
+// ==============================
+const dustCount=300;
+const dustGeo=new THREE.BufferGeometry();
+const dustPos=new Float32Array(dustCount*3);
+for(let i=0;i<dustCount;i++){
+  dustPos[i*3]=Math.random()*WORLD_W;
+  dustPos[i*3+1]=5+Math.random()*25;
+  dustPos[i*3+2]=Math.random()*WORLD_D;
+}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+const dustMat=new THREE.PointsMaterial({color:0xffffee,size:0.08,transparent:true,opacity:0.4,sizeAttenuation:true});
+const dustParticles=new THREE.Points(dustGeo,dustMat);
+scene.add(dustParticles);
 
-        let cart = [];
-        let currentItem = null;
-        let selectedSize = 'medium';
-        let modalQty = 1;
-        let paymentMethod = 'paypal';
+// ==============================
+// لاعب
+// ==============================
+const player={x:WORLD_W/2,y:25,z:WORLD_D/2,vx:0,vy:0,vz:0,yaw:0,pitch:0,onGround:false,selectedSlot:0};
+function placeOnGround(){for(let y=MAX_H-1;y>=0;y--){if(BLOCK_TYPES[world.get(Math.floor(player.x),y,Math.floor(player.z))]?.solid){player.y=y+1+0.01;return;}}}
+placeOnGround();
+camera.position.set(player.x,player.y+PLAYER_H*0.85,player.z);
 
-        // ==================== RENDER MENU ====================
-        function renderMenu(filter='all') {
-            const grid = document.getElementById('menu-grid');
-            const filtered = filter==='all' ? menuItems : menuItems.filter(i=>i.category===filter);
-            grid.innerHTML = filtered.map((item,i) => `
-                <div class="menu-card rounded-2xl border border-white/10 bg-neutral-900/40 overflow-hidden group" data-category="${item.category}" style="transition-delay:${i*0.05}s">
-                    <div class="relative h-44 overflow-hidden">
-                        <img src="${item.image}" alt="${item.name}" class="card-image w-full h-full object-cover transition-transform duration-700" loading="lazy"/>
-                        <div class="absolute inset-0 bg-gradient-to-t from-neutral-900/80 via-transparent to-transparent"></div>
-                        ${item.badge ? `<div class="absolute top-3 right-3 badge-${item.badge} text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full">${item.badge==='popular'?'⭐ الأكثر طلباً':item.badge==='new'?'🆕 جديد':'🌶️ حار'}</div>` : ''}
-                        ${item.spicy && !item.badge ? '<div class="absolute top-3 right-3 text-xs">🌶️</div>' : ''}
-                        <div class="absolute bottom-3 left-3">
-                            <span class="text-[9px] text-neutral-400 font-italian italic">${item.nameIt}</span>
-                        </div>
-                    </div>
-                    <div class="p-5">
-                        <div class="flex items-start justify-between gap-2 mb-1.5">
-                            <h3 class="text-sm font-bold leading-tight">${item.name}</h3>
-                            <div class="price-tag flex-shrink-0 bg-white/10 text-[#00B140] text-xs font-bold px-2.5 py-1 rounded-full transition-all duration-300">
-                                ${item.isSide ? item.prices.small+' ر.س' : item.prices.medium+' ر.س'}
-                            </div>
-                        </div>
-                        <p class="text-neutral-500 text-[10px] leading-relaxed mb-4 line-clamp-2">${item.desc}</p>
-                        ${!item.isSide ? `<div class="flex items-center gap-1.5 mb-4 text-[9px] text-neutral-600">
-                            <span>صغير ${item.prices.small}</span><span>·</span><span>وسط ${item.prices.medium}</span><span>·</span><span>كبير ${item.prices.large}</span><span>ر.س</span>
-                        </div>` : ''}
-                        <button onclick="openSizeModal(${item.id})" class="add-btn w-full bg-white/5 border border-white/10 text-neutral-300 text-xs font-medium py-2.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
-                            <span class="iconify text-sm" data-icon="lucide:plus"></span><span>أضف للسلة</span>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            requestAnimationFrame(()=>{
-                setTimeout(()=>{
-                    document.querySelectorAll('.menu-card').forEach((c,i)=>{
-                        setTimeout(()=>c.classList.add('visible'), i*70);
-                    });
-                },30);
-            });
-        }
+// ==============================
+// إدخال
+// ==============================
+const keys={};
+let isLocked=false,gameStarted=false;
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','KeyW','KeyA','KeyS','KeyD','ShiftLeft'].includes(e.code))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.code]=false;});
+document.addEventListener('keydown',e=>{const n=parseInt(e.key);if(n>=1&&n<=9){player.selectedSlot=n-1;updateHotbarUI();}});
+function requestLock(){renderer.domElement.requestPointerLock();}
+document.addEventListener('pointerlockchange',()=>{isLocked=!!document.pointerLockElement;document.getElementById('crosshair').style.display=isLocked?'block':'none';document.getElementById('pauseHint').style.display=(!isLocked&&gameStarted)?'block':'none';});
+document.addEventListener('mousemove',e=>{if(!isLocked)return;player.yaw-=e.movementX*0.0018;player.pitch-=e.movementY*0.0018;player.pitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,player.pitch));});
+document.addEventListener('mousedown',e=>{if(!isLocked){requestLock();return;}if(e.button===0)breakBlock();else if(e.button===2)placeBlock();});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('wheel',e=>{if(!isLocked)return;player.selectedSlot=e.deltaY>0?(player.selectedSlot+1)%9:(player.selectedSlot+8)%9;updateHotbarUI();});
 
-        function filterMenu(cat) {
-            document.querySelectorAll('.category-btn').forEach(b=>{
-                b.classList.toggle('active', b.dataset.cat===cat);
-                b.classList.toggle('text-neutral-400', b.dataset.cat!==cat);
-            });
-            renderMenu(cat);
-        }
+// ==============================
+// تصويب
+// ==============================
+const raycaster=new THREE.Raycaster();
+raycaster.far=REACH;
+function getRayTarget(){
+  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  raycaster.set(camera.position,dir);
+  const hits=raycaster.intersectObjects(worldMeshes);
+  if(!hits.length)return null;
+  const hit=hits[0],n=hit.face.normal;
+  const blockPos=new THREE.Vector3(Math.floor(hit.point.x-n.x*0.01),Math.floor(hit.point.y-n.y*0.01),Math.floor(hit.point.z-n.z*0.01));
+  const placePos=new THREE.Vector3(Math.floor(hit.point.x+n.x*0.01),Math.floor(hit.point.y+n.y*0.01),Math.floor(hit.point.z+n.z*0.01));
+  return{blockPos,placePos};
+}
+function breakBlock(){
+  const t=getRayTarget();if(!t)return;
+  const{blockPos}=t,bx=blockPos.x,by=blockPos.y,bz=blockPos.z;
+  if(bx<0||bx>=WORLD_W||by<0||by>=MAX_H||bz<0||bz>=WORLD_D)return;
+  if(world.get(bx,by,bz)===0)return;
+  const bt=world.get(bx,by,bz);
+  world.set(bx,by,bz,0);
+  worldMeshes=rebuildMeshes(world,materials,scene,worldMeshes);
+  worldMeshes.forEach(m=>scene.add(m));
+  spawnParticles(bx+0.5,by+0.5,bz+0.5,bt);
+}
+function placeBlock(){
+  const t=getRayTarget();if(!t)return;
+  const{placePos}=t,px=placePos.x,py=placePos.y,pz=placePos.z;
+  if(px<0||px>=WORLD_W||py<0||py>=MAX_H||pz<0||pz>=WORLD_D)return;
+  if(world.get(px,py,pz)!==0)return;
+  const dx=px+0.5-player.x,dy=py+0.5-player.y,dz=pz+0.5-player.z;
+  if(Math.abs(dx)<PLAYER_R+0.6&&Math.abs(dz)<PLAYER_R+0.6&&dy>-0.2&&dy<PLAYER_H+0.3)return;
+  world.set(px,py,pz,HOTBAR_ITEMS[player.selectedSlot]);
+  worldMeshes=rebuildMeshes(world,materials,scene,worldMeshes);
+  worldMeshes.forEach(m=>scene.add(m));
+}
 
-        // ==================== SIZE MODAL ====================
-        function openSizeModal(id) {
-            currentItem = menuItems.find(i=>i.id===id);
-            if(!currentItem) return;
-            selectedSize = 'medium';
-            modalQty = 1;
-            document.getElementById('modal-qty').textContent = '1';
-            document.getElementById('modal-title').textContent = currentItem.name + ' — ' + currentItem.nameIt;
+// ==============================
+// جزيئات التدمير
+// ==============================
+const particles=[];
+function getBlockColor(bt){
+  const c=BLOCK_COLORS[bt]?.[1];return c?new THREE.Color(c[0],c[1],c[2]):new THREE.Color(0.5,0.5,0.5);
+}
+function spawnParticles(x,y,z,bt){
+  const col=getBlockColor(bt);
+  for(let i=0;i<16;i++){
+    const s=0.06+Math.random()*0.08;
+    const geo=new THREE.BoxGeometry(s,s,s);
+    const mat=new THREE.MeshStandardMaterial({color:col.clone().offsetHSL(0,0,(Math.random()-0.5)*0.15),roughness:0.9});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(x+(Math.random()-0.5)*0.7,y+(Math.random()-0.5)*0.7,z+(Math.random()-0.5)*0.7);
+    mesh.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
+    scene.add(mesh);
+    particles.push({mesh,vx:(Math.random()-0.5)*5,vy:Math.random()*6+2,vz:(Math.random()-0.5)*5,life:0.7+Math.random()*0.6});
+  }
+}
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];p.vy-=18*dt;
+    p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;
+    p.mesh.rotation.x+=dt*8;p.mesh.rotation.z+=dt*5;
+    p.life-=dt;p.mesh.material.opacity=Math.max(0,p.life*1.5);p.mesh.material.transparent=true;
+    const sc=Math.max(0.01,p.life*1.2);p.mesh.scale.setScalar(sc);
+    if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();particles.splice(i,1);}
+  }
+}
 
-            const sd = document.getElementById('modal-sizes');
-            if(currentItem.isSide) {
-                const labels = currentItem.nameIt.includes('Tiramis')||currentItem.nameIt.includes('Panna') ? {small:'حجم فردي',medium:'حجم كبير'} : {small:'حجم عادي',medium:'حجم كبير'};
-                sd.innerHTML = Object.entries(currentItem.prices).filter(([k,v])=>v!==null).map(([size,price])=>`
-                    <button onclick="selectSize('${size}')" class="size-btn ${size==='small'?'selected':''} w-full flex items-center justify-between p-3.5 rounded-xl border border-white/10 transition-all duration-300 hover:border-[#00953E]/30">
-                        <span class="text-sm ${size==='small'?'':'text-neutral-400'}">${labels[size]}</span>
-                        <span class="size-price text-sm font-bold ${size==='small'?'text-[#00B140]':'text-neutral-400'}">${price} ر.س</span>
-                    </button>
-                `).join('');
-                selectedSize = 'small';
-            } else {
-                const labels = {small:'صغير Piccolo (6 شرائح)',medium:'وسط Media (8 شرائح)',large:'كبير Grande (12 شريحة)'};
-                const icons = {small:'lucide:circle-dot',medium:'lucide:circle-dot',large:'lucide:circle-dot'};
-                sd.innerHTML = Object.entries(currentItem.prices).map(([size,price])=>`
-                    <button onclick="selectSize('${size}')" class="size-btn ${size==='medium'?'selected':''} w-full flex items-center justify-between p-3.5 rounded-xl border border-white/10 transition-all duration-300 hover:border-[#00953E]/30">
-                        <div class="flex items-center gap-2"><span class="size-icon iconify text-sm ${size==='medium'?'text-[#00B140]':'text-neutral-500'}" data-icon="${icons[size]}"></span><span class="text-sm ${size==='medium'?'':'text-neutral-400'}">${labels[size]}</span></div>
-                        <span class="size-price text-sm font-bold ${size==='medium'?'text-[#00B140]':'text-neutral-400'}">${price} ر.س</span>
-                    </button>
-                `).join('');
-            }
-            document.getElementById('size-modal').classList.remove('hidden');
-        }
+// ==============================
+// فيزياء
+// ==============================
+function isSolid(x,y,z){const bx=Math.floor(x),by=Math.floor(y),bz=Math.floor(z);if(bx<0||bx>=WORLD_W||by<0||by>=MAX_H||bz<0||bz>=WORLD_D)return true;return BLOCK_TYPES[world.get(bx,by,bz)]?.solid||false;}
+function collides(px,py,pz){
+  return isSolid(px-PLAYER_R,py,pz-PLAYER_R)||isSolid(px+PLAYER_R,py,pz-PLAYER_R)||isSolid(px-PLAYER_R,py,pz+PLAYER_R)||isSolid(px+PLAYER_R,py,pz+PLAYER_R)||
+    isSolid(px-PLAYER_R,py+PLAYER_H*0.9,pz-PLAYER_R)||isSolid(px+PLAYER_R,py+PLAYER_H*0.9,pz-PLAYER_R)||isSolid(px-PLAYER_R,py+PLAYER_H*0.9,pz+PLAYER_R)||isSolid(px+PLAYER_R,py+PLAYER_H*0.9,pz+PLAYER_R);
+}
+function updatePlayer(dt){
+  const speed=keys['ShiftLeft']?SPRINT_SPEED:WALK_SPEED;
+  const sinY=Math.sin(player.yaw),cosY=Math.cos(player.yaw);
+  let mx=0,mz=0;
+  if(keys['KeyW']){mx-=sinY;mz-=cosY;}
+  if(keys['KeyS']){mx+=sinY;mz+=cosY;}
+  if(keys['KeyA']){mx-=cosY;mz+=sinY;}
+  if(keys['KeyD']){mx+=cosY;mz-=sinY;}
+  const len=Math.sqrt(mx*mx+mz*mz);if(len>0){mx/=len;mz/=len;}
+  player.vx=mx*speed;player.vz=mz*speed;
+  if(keys['Space']&&player.onGround){player.vy=JUMP_VEL;player.onGround=false;}
+  player.vy+=GRAVITY*dt;
+  // تحريك محاور
+  player.x+=player.vx*dt;if(collides(player.x,player.y,player.z))player.x-=player.vx*dt;
+  player.z+=player.vz*dt;if(collides(player.x,player.y,player.z))player.z-=player.vz*dt;
+  player.y+=player.vy*dt;player.onGround=false;
+  if(player.vy<=0){
+    if(collides(player.x,player.y,player.z)){player.y=Math.floor(player.y)+1;player.vy=0;player.onGround=true;}
+  }
+  if(player.vy>0){
+    if(collides(player.x,player.y+PLAYER_H,player.z))player.vy=0;
+  }
+  player.x=Math.max(PLAYER_R,Math.min(WORLD_W-PLAYER_R,player.x));
+  player.z=Math.max(PLAYER_R,Math.min(WORLD_D-PLAYER_R,player.z));
+  if(player.y<-10){placeOnGround();player.vy=0;}
+  camera.position.set(player.x,player.y+PLAYER_H*0.85,player.z);
+  camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;
+}
 
-        function selectSize(size) {
-            selectedSize = size;
-            document.querySelectorAll('.size-btn').forEach((btn,i)=>{
-                const sizes = currentItem.isSide ? ['small','medium'] : ['small','medium','large'];
-                const isSelected = sizes[i]===size;
-                btn.classList.toggle('selected', isSelected);
-                btn.querySelector('span:first-child, .size-icon')?.classList?.toggle('text-[#00B140]', isSelected);
-                btn.querySelector('span:first-child, .size-icon')?.classList?.toggle('text-neutral-400', !isSelected);
-                btn.querySelector('span:first-child, .size-icon')?.classList?.toggle('text-neutral-500', !isSelected);
-                btn.querySelector('.size-price')?.classList?.toggle('text-[#00B140]', isSelected);
-                btn.querySelector('.size-price')?.classList?.toggle('text-neutral-400', !isSelected);
-            });
-        }
+// ==============================
+// كتلة التمييز
+// ==============================
+const hlGeo=new THREE.BoxGeometry(1.006,1.006,1.006);
+const hlEdges=new THREE.EdgesGeometry(hlGeo);
+const hlMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.55,linewidth:1});
+const hlMesh=new THREE.LineSegments(hlEdges,hlMat);hlMesh.visible=false;scene.add(hlMesh);
+function updateHighlight(){
+  if(!isLocked){hlMesh.visible=false;return;}
+  const t=getRayTarget();if(!t){hlMesh.visible=false;return;}
+  hlMesh.position.set(t.blockPos.x+0.5,t.blockPos.y+0.5,t.blockPos.z+0.5);hlMesh.visible=true;
+}
 
-        function changeQty(d) {
-            modalQty = Math.max(1, Math.min(20, modalQty+d));
-            document.getElementById('modal-qty').textContent = modalQty;
-        }
+// ==============================
+// واجهة المستخدم
+// ==============================
+function getBlockCSSColor(bt){const c=BLOCK_COLORS[bt]?.[1];if(!c)return'#888';return`rgb(${c[0]*255|0},${c[1]*255|0},${c[2]*255|0})`;}
+function buildHotbarUI(){
+  const bar=document.getElementById('hotbar');bar.innerHTML='';
+  HOTBAR_ITEMS.forEach((bt,i)=>{
+    const slot=document.createElement('div');
+    slot.className='hotbar-slot'+(i===player.selectedSlot?' active':'');
+    slot.innerHTML=`<div class="slot-key">${i+1}</div><div class="slot-preview" style="background:${getBlockCSSColor(bt)}"></div>`;
+    slot.addEventListener('click',()=>{player.selectedSlot=i;updateHotbarUI();if(!isLocked)requestLock();});
+    bar.appendChild(slot);
+  });
+}
+function updateHotbarUI(){
+  document.querySelectorAll('.hotbar-slot').forEach((s,i)=>s.classList.toggle('active',i===player.selectedSlot));
+  const nameEl=document.getElementById('slotName');
+  nameEl.textContent=BLOCK_TYPES[HOTBAR_ITEMS[player.selectedSlot]].name;
+  nameEl.classList.add('show');clearTimeout(nameEl._t);nameEl._t=setTimeout(()=>nameEl.classList.remove('show'),1500);
+}
+function updateHUD(){
+  const info=document.getElementById('hud-info');
+  info.innerHTML=`X: ${Math.floor(player.x)} Y: ${Math.floor(player.y)} Z: ${Math.floor(player.z)}<br>FPS: ${currentFPS}`;
+}
 
-        function closeSizeModal() { document.getElementById('size-modal').classList.add('hidden'); currentItem=null; }
+// ==============================
+// تحديثات السماء والبيئة
+// ==============================
+function updateEnvironment(dt,time){
+  water.material.uniforms['time'].value+=dt*0.5;
+  // تحريك الغيوم
+  cloudGroup.children.forEach(c=>{c.position.x+=c.userData.speed*dt;if(c.position.x>WORLD_W+20)c.position.x=-20;});
+  // تحريك الغبار
+  const dp=dustParticles.geometry.attributes.position.array;
+  for(let i=0;i<dustCount;i++){
+    dp[i*3]+=Math.sin(time+i)*0.01;
+    dp[i*3+1]+=Math.cos(time*0.7+i*0.5)*0.005;
+    dp[i*3+2]+=Math.cos(time+i)*0.01;
+    if(dp[i*3+1]>30)dp[i*3+1]=5;if(dp[i*3+1]<5)dp[i*3+1]=30;
+  }
+  dustParticles.geometry.attributes.position.needsUpdate=true;
+  // حركة شمس خفيفة
+  const sunAngle=time*0.02;
+  sunPos.setFromSphericalCoords(1,phi,theta+sunAngle*0.1);
+  skyU['sunPosition'].value.copy(sunPos);
+  dirLight.position.copy(sunPos.clone().multiplyScalar(80));
+}
 
-        function confirmAdd() {
-            if(!currentItem) return;
-            const price = currentItem.prices[selectedSize];
-            const sizeLabel = selectedSize==='small'?'صغير':selectedSize==='medium'?(currentItem.isSide?'كبير':'وسط'):'كبير';
-            for(let i=0;i<modalQty;i++){
-                cart.push({ id:currentItem.id, name:currentItem.name, nameIt:currentItem.nameIt, size:sizeLabel, price, image:currentItem.image });
-            }
-            updateCart();
-            closeSizeModal();
-            showToast(`تمت إضافة ${modalQty>1?modalQty+'x ':''}${currentItem.name} (${sizeLabel})`);
-        }
+// ==============================
+// بدء اللعبة مباشرة
+// ==============================
+gameStarted=true;
+document.getElementById('hotbar').style.display='flex';
+document.getElementById('hud-info').style.display='block';
+document.getElementById('controlsGuide').style.display='block';
+buildHotbarUI();
+requestLock();
 
-        // ==================== CART ====================
-        function updateCart() {
-            const countEl=document.getElementById('cart-count'), itemsEl=document.getElementById('cart-items'), footerEl=document.getElementById('cart-footer'), totalEl=document.getElementById('cart-total'), subEl=document.getElementById('cart-subtotal'), delEl=document.getElementById('cart-delivery');
-            if(cart.length===0) {
-                countEl.classList.add('hidden'); footerEl.classList.add('hidden');
-                itemsEl.innerHTML=`<div class="flex flex-col items-center justify-center h-full text-center"><span class="iconify text-4xl text-neutral-700 mb-3" data-icon="lucide:shopping-bag"></span><p class="text-neutral-500 text-sm">سلتك فارغة</p><p class="text-neutral-600 text-[10px] mt-1">أضف بيتزا إيطالية لذيذة!</p></div>`;
-                return;
-            }
-            countEl.classList.remove('hidden'); countEl.textContent=cart.length; footerEl.classList.remove('hidden');
-            const sub=cart.reduce((s,i)=>s+i.price,0);
-            const del=sub>=60?0:10;
-            totalEl.textContent=(sub+del)+' ر.س';
-            subEl.textContent=sub+' ر.س';
-            delEl.textContent=del===0?'مجاني ✓':del+' ر.س';
-            delEl.classList.toggle('text-[#00B140]', del===0);
-            delEl.classList.toggle('text-neutral-400', del!==0);
+// ==============================
+// تغيير حجم
+// ==============================
+window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
 
-            // Merge duplicates for display
-            const merged = {};
-            cart.forEach((item,idx) => {
-                const key = item.id+'-'+item.size;
-                if(!merged[key]) merged[key] = {...item, count:0, indices:[]};
-                merged[key].count++;
-                merged[key].indices.push(idx);
-            });
+// ==============================
+// حلقة اللعب
+// ==============================
+let lastTime=performance.now(),hudTimer=0,currentFPS=0,fpsFrames=0,fpsTime=0;
 
-            itemsEl.innerHTML = Object.values(merged).map(item=>`
-                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 animate-scale-in">
-                    <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"><img src="${item.image}" alt="" class="w-full h-full object-cover"/></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-xs font-medium truncate">${item.name} <span class="text-neutral-600 font-italian italic">${item.nameIt}</span></div>
-                        <div class="text-[9px] text-neutral-500">${item.size} × ${item.count}</div>
-                    </div>
-                    <div class="text-xs font-bold text-[#00B140] flex-shrink-0">${item.price*item.count} ر.س</div>
-                    <button onclick="removeItemGroup(${JSON.stringify(item.indices).replace(/"/g,'&quot;')})" class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center hover:bg-red-500/20 transition-colors flex-shrink-0"><span class="iconify text-[10px] text-neutral-500" data-icon="lucide:x"></span></button>
-                </div>
-            `).join('');
-        }
+function gameLoop(now){
+  requestAnimationFrame(gameLoop);
+  const dt=Math.min((now-lastTime)/1000,0.05);lastTime=now;
+  fpsFrames++;fpsTime+=dt;
+  if(fpsTime>=0.5){currentFPS=Math.round(fpsFrames/fpsTime);fpsFrames=0;fpsTime=0;}
 
-        function removeItemGroup(indices) {
-            const sorted = [...indices].sort((a,b)=>b-a);
-            const removed = cart[sorted[0]];
-            sorted.forEach(i=>cart.splice(i,1));
-            updateCart();
-            showToast(`تم حذف ${removed.name}`, 'remove');
-        }
-
-        function openCart() {
-            document.getElementById('cart-overlay').classList.remove('hidden');
-            document.getElementById('cart-sidebar').style.transform='translateX(0)';
-            document.body.style.overflow='hidden';
-        }
-        function closeCart() {
-            document.getElementById('cart-overlay').classList.add('hidden');
-            document.getElementById('cart-sidebar').style.transform='translateX(-100%)';
-            document.body.style.overflow='';
-        }
-
-        // ==================== CHECKOUT ====================
-        function openCheckout() {
-            if(cart.length===0) return;
-            closeCart();
-            setTimeout(()=>{
-                resetCheckoutSteps();
-                document.getElementById('checkout-modal').classList.remove('hidden');
-                document.body.style.overflow='hidden';
-            },300);
-        }
-        function closeCheckout() {
-            document.getElementById('checkout-modal').classList.add('hidden');
-            document.body.style.overflow='';
-        }
-
-        function resetCheckoutSteps() {
-            showStep(1);
-            document.getElementById('inp-name').value='';
-            document.getElementById('inp-phone').value='';
-            document.getElementById('inp-address').value='';
-            document.getElementById('inp-notes').value='';
-            document.getElementById('inp-paypal').value='';
-            document.getElementById('step1-error').classList.add('hidden');
-            document.getElementById('step2-error').classList.add('hidden');
-            paymentMethod='paypal';
-        }
-
-        function showStep(n) {
-            document.getElementById('checkout-step1').classList.toggle('hidden',n!==1);
-            document.getElementById('checkout-step2').classList.toggle('hidden',n!==2);
-            document.getElementById('checkout-step3').classList.toggle('hidden',n!==3);
-            for(let i=1;i<=3;i++){
-                const el=document.getElementById('step'+i);
-                el.className = i<n ? 'step-done w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold' : i===n ? 'step-active w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold' : 'step-pending w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold';
-                el.textContent = i<n ? '✓' : i;
-            }
-        }
-
-        function goToStep1() { showStep(1); }
-
-        function goToStep2() {
-            const name=document.getElementById('inp-name').value.trim();
-            const phone=document.getElementById('inp-phone').value.trim();
-            const addr=document.getElementById('inp-address').value.trim();
-            if(!name||!phone||!addr) { document.getElementById('step1-error').classList.remove('hidden'); return; }
-            document.getElementById('step1-error').classList.add('hidden');
-
-            // Fill summary
-            const merged={};
-            cart.forEach(item=>{ const k=item.id+'-'+item.size; if(!merged[k]) merged[k]={...item,count:0}; merged[k].count++; });
-            const sub=cart.reduce((s,i)=>s+i.price,0);
-            const del=sub>=60?0:10;
-            document.getElementById('checkout-summary').innerHTML=Object.values(merged).map(i=>`
-                <div class="flex items-center justify-between text-[10px]">
-                    <span class="text-neutral-400">${i.name} (${i.size}) ×${i.count}</span>
-                    <span class="text-neutral-300">${i.price*i.count} ر.س</span>
-                </div>
-            `).join('');
-            document.getElementById('checkout-total').textContent=(sub+del)+' ر.س';
-            showStep(2);
-        }
-
-        function selectCash(el) {
-            paymentMethod='cash';
-            document.getElementById('paypal-form').classList.add('hidden');
-            el.parentElement.querySelectorAll('label').forEach(l=>{
-                l.classList.remove('border-2','border-[#00953E]','bg-[#00953E]/5');
-                l.classList.add('border','border-white/10','bg-white/5');
-                l.querySelector('.text-sm')?.classList?.add('text-neutral-400');
-                l.querySelector('.text-sm')?.classList?.remove('text-white');
-                const dot=l.querySelector('.w-5 > div');
-                if(dot){dot.classList.remove('bg-[#00953E]','w-2.5','h-2.5');dot.classList.add('w-0','h-0');}
-                const ring=l.querySelector('.w-5');
-                if(ring){ring.classList.remove('border-[#00953E]');ring.classList.add('border-white/20');}
-            });
-            el.classList.remove('border','border-white/10','bg-white/5');
-            el.classList.add('border-2','border-[#00953E]','bg-[#00953E]/5');
-            el.querySelector('.text-sm')?.classList?.remove('text-neutral-400');
-            const dot=el.querySelector('.w-5 > div');
-            if(dot){dot.classList.add('bg-[#00953E]','w-2.5','h-2.5');dot.classList.remove('w-0','h-0');}
-            const ring=el.querySelector('.w-5');
-            if(ring){ring.classList.add('border-[#00953E]');ring.classList.remove('border-white/20');}
-        }
-
-        // Also handle PayPal label click to reset
-        document.addEventListener('click',function(e){
-            const paypalLabel = e.target.closest('label:has(input[value="paypal"])');
-            if(paypalLabel && paymentMethod!=='paypal'){
-                paymentMethod='paypal';
-                document.getElementById('paypal-form').classList.remove('hidden');
-                // Reset all labels
-                paypalLabel.parentElement.querySelectorAll('label').forEach(l=>{
-                    l.classList.remove('border-2','border-[#00953E]','bg-[#00953E]/5');
-                    l.classList.add('border','border-white/10','bg-white/5');
-                    l.querySelectorAll('.text-sm').forEach(s=>{s.classList.add('text-neutral-400');s.classList.remove('text-white');});
-                    const dot=l.querySelector('.w-5 > div');
-                    if(dot){dot.classList.remove('bg-[#00953E]','w-2.5','h-2.5');dot.classList.add('w-0','h-0');}
-                    const ring=l.querySelector('.w-5');
-                    if(ring){ring.classList.remove('border-[#00953E]');ring.classList.add('border-white/20');}
-                });
-                // Activate PayPal
-                paypalLabel.classList.remove('border','border-white/10','bg-white/5');
-                paypalLabel.classList.add('border-2','border-[#00953E]','bg-[#00953E]/5');
-                paypalLabel.querySelectorAll('.text-sm').forEach(s=>{s.classList.remove('text-neutral-400');});
-                const dot=paypalLabel.querySelector('.w-5 > div');
-                if(dot){dot.classList.add('bg-[#00953E]','w-2.5','h-2.5');dot.classList.remove('w-0','h-0');}
-                const ring=paypalLabel.querySelector('.w-5');
-                if(ring){ring.classList.add('border-[#00953E]');ring.classList.remove('border-white/20');}
-            }
-        });
-
-        function goToStep3() {
-            if(paymentMethod==='paypal') {
-                const email=document.getElementById('inp-paypal').value.trim();
-                if(!email||!email.includes('@')) { document.getElementById('step2-error').classList.remove('hidden'); document.getElementById('step2-error').textContent='يرجى إدخال بريد PayPal صحيح'; return; }
-            }
-            document.getElementById('step2-error').classList.add('hidden');
-
-            // Generate order number
-            const orderNum = '#LP-' + String(Math.floor(10000+Math.random()*90000));
-            document.getElementById('order-number').textContent = orderNum;
-
-            const sub=cart.reduce((s,i)=>s+i.price,0);
-            const del=sub>=60?0:10;
-            const total=sub+del;
-
-            const merged={};
-            cart.forEach(item=>{ const k=item.id+'-'+item.size; if(!merged[k]) merged[k]={...item,count:0}; merged[k].count++; });
-
-            document.getElementById('confirmation-details').innerHTML=`
-                <div class="flex justify-between"><span class="text-neutral-500">الاسم</span><span>${document.getElementById('inp-name').value}</span></div>
-                <div class="flex justify-between"><span class="text-neutral-500">الجوال</span><span dir="ltr">${document.getElementById('inp-phone').value}</span></div>
-                <div class="flex justify-between"><span class="text-neutral-500">العنوان</span><span class="text-left max-w-[200px]">${document.getElementById('inp-address').value}</span></div>
-                <div class="flex justify-between"><span class="text-neutral-500">الدفع</span><span>${paymentMethod==='paypal'?'PayPal':'نقداً عند الاستلام'}</span></div>
-                <div class="border-t border-white/5 my-2"></div>
-                ${Object.values(merged).map(i=>`<div class="flex justify-between"><span class="text-neutral-400">${i.name} (${i.size}) ×${i.count}</span><span>${i.price*i.count} ر.س</span></div>`).join('')}
-                <div class="border-t border-white/5 my-2"></div>
-                <div class="flex justify-between"><span class="text-neutral-500">التوصيل</span><span>${del===0?'مجاني':del+' ر.س'}</span></div>
-                <div class="flex justify-between font-bold"><span>الإجمالي</span><span class="text-[#00B140]">${total} ر.س</span></div>
-            `;
-
-            showStep(3);
-        }
-
-        function finishOrder() {
-            cart=[];
-            updateCart();
-            closeCheckout();
-            showToast('شكراً لطلبك! سنتواصل معك قريباً 🇮🇹', 'success');
-        }
-
-        // ==================== TOAST ====================
-        function showToast(msg, type='add') {
-            const c=document.getElementById('toast-container');
-            const t=document.createElement('div');
-            const bg=type==='remove'?'bg-red-500/10 border-red-500/20':type==='success'?'bg-[#00953E]/10 border-[#00953E]/20':'bg-[#00953E]/10 border-[#00953E]/20';
-            const ic=type==='remove'?'text-red-400 lucide:minus-circle':type==='success'?'text-[#00B140] lucide:check-circle':'text-[#00B140] lucide:check';
-            t.className=`toast flex items-center gap-2 px-4 py-2.5 rounded-xl ${bg} border backdrop-blur-md max-w-[300px]`;
-            t.innerHTML=`<span class="iconify ${ic} flex-shrink-0"></span><span class="text-xs text-neutral-200">${msg}</span>`;
-            c.appendChild(t);
-            setTimeout(()=>{ t.classList.add('toast-exit'); setTimeout(()=>t.remove(),300); },2800);
-        }
-
-        // ==================== MOBILE MENU ====================
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-
-        // ==================== INIT ====================
-        document.addEventListener('DOMContentLoaded', ()=>{
-            renderMenu();
-            window.addEventListener('scroll',()=>{
-                const nav=document.querySelector('nav');
-                nav.classList.toggle('border-white/10', window.scrollY>50);
-                nav.classList.toggle('border-white/5', window.scrollY<=50);
-            });
-        });
-    </script>
+  if(isLocked&&gameStarted){
+    updatePlayer(dt);updateHighlight();updateParticles(dt);
+  }
+  updateEnvironment(dt,now*0.001);
+  hudTimer+=dt;if(hudTimer>0.25){updateHUD();hudTimer=0;}
+  renderer.render(scene,camera);
+}
+requestAnimationFrame(gameLoop);
+</script>
 </body>
 </html>
